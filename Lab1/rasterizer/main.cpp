@@ -85,13 +85,17 @@ void resize_obj(std::vector<tinyobj::shape_t> &shapes){
 
 int main(int argc, char **argv)
 {
-	if(argc < 3) {
+	/*if(argc < 3) {
       cout << "Usage: Assignment1 meshfile imagefile" << endl;
       return 0;
-   }
+   }*/
 	// OBJ filename
-	string meshName(argv[1]);
-	string imgName(argv[2]);
+	/*string meshName(argv[1]);
+	string imgName(argv[2]);*/
+
+	//SWITCH BACK WHEN DONE !!!!!!!!!!!!!!!!!!!!!!!!!!!
+	string meshName("tri.obj");
+	string imgName("result.png");
 
 	//set g_width and g_height appropriately!
 	g_width = g_height = 100;
