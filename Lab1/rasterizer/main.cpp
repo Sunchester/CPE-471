@@ -82,7 +82,48 @@ void resize_obj(std::vector<tinyobj::shape_t> &shapes){
    }
 }
 
+float sign(int p1x, int p1y, int p2x, int p2y, int p3x, int p3y)
+{
+	return (p1x - p3x) * (p2y - p3y) - (p2x - p3x) * (p1y - p3y);
+}
 
+bool PointInTriangle(int ptx, int pty, int v1x, int v1y, int v2x, int v2y, int v3x, int v3y)
+{
+	int d1, d2, d3;
+	bool has_neg, has_pos;
+
+	d1 = sign(ptx, pty, v1x, v1y, v2x, v2y);
+	d2 = sign(ptx, pty, v2x, v2y, v3x, v3y);
+	d3 = sign(ptx, pty, v3x, v3y, v1x, v1y);
+
+	has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
+	has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+
+	return !(has_neg && has_pos);
+}
+
+
+float calculateColor(int area, int ptx, int pty, int v1x, int v1y, int v2x, int v2y)
+{
+	int one = v2x - v1x;
+	int two = ptx - v1x;
+	int three = v2y - v1y;
+	int four = pty - v1y;
+	float redArea = one * four - three * two;
+	redArea = abs(redArea) / 2;
+	float solution = redArea / area;
+	return solution;
+}
+int calculateArea(int v1x, int v1y, int v1z, int v2x, int v2y, int v2z, int v3x, int v3y, int v3z)
+{
+	int one = v2x - v1x;
+	int two = v3x - v1x;
+	int three = v2y - v1y;
+	int four = v3y - v1y;
+	int solution = one * four - three * two; 
+	solution = abs(solution) / 2;
+	return solution;
+}
 int main(int argc, char **argv)
 {
 	/*if(argc < 3) {
@@ -127,7 +168,92 @@ int main(int argc, char **argv)
 	cout << "Number of triangles: " << triBuf.size()/3 << endl;
 
 	//TODO add code to iterate through each triangle and rasterize it 
-	
+	for (int tri = 0; tri < triBuf.size() / 3; tri++)
+	{
+		int v1x;
+		int v1y;
+		int v1z;
+		int v2x;
+		int v2y;
+		int v2z;
+		int v3x;
+		int v3y;
+		int v3z;
+		for (int x = 0; x <= posBuf.size(); x += 3)
+		{
+			if (x == 0)
+			{
+				v1x = (posBuf.at(x) + 1) * 50;
+				v1y = (posBuf.at(x + 1) + 1) * 50;
+				v1z = (posBuf.at(x + 2) + 1) * 50;
+			}
+			if (x == 3)
+			{
+				v2x = (posBuf.at(x) + 1) * 50;
+				v2y = (posBuf.at(x + 1) + 1) * 50;
+				v2z = (posBuf.at(x + 2) + 1) * 50;
+			}
+			if (x == 6)
+			{
+				v3x = (posBuf.at(x) + 1) * 50;
+				v3y = (posBuf.at(x + 1) + 1) * 50;
+				v3z = (posBuf.at(x + 2) + 1) * 50;
+			}
+		}
+		/*cout << "Vertex 1" << endl;
+		cout << v1x << endl;
+		cout << v1y << endl;
+		cout << v1z << endl;
+		cout << "Vertex 2" << endl;
+		cout << v2x << endl;
+		cout << v2y << endl;
+		cout << v2z << endl;
+		cout << "Vertex 3" << endl;
+		cout << v3x << endl;
+		cout << v3y << endl;
+		cout << v3z << endl;*/
+
+		int area = calculateArea(v1x, v1y, v1z, v2x, v2y, v2z, v3x, v3y, v3z);
+
+		int startx = min(v1x, v2x);
+		startx = min(startx, v3x);
+		int starty = max(v1y, v2y);
+		starty = max(starty, v3y);
+
+
+		int endx = max(v1x, v2x);
+		endx = max(endx, v3x);
+		int endy = min(v1y, v2y);
+		endy = min(endy, v3y);
+
+		int boxStart[2] = { startx, starty };
+		int boxEnd[2] = { endx, endy };
+
+		/*cout << "Start" << endl;
+		cout << boxStart[0] << endl;
+		cout << boxStart[1] << endl;
+
+		cout << "End" << endl;
+		cout << boxEnd[0] << endl;
+		cout << boxEnd[1] << endl;*/
+		for (int y = boxStart[1]; y >= boxEnd[1]; y--)
+		{
+			for (int x = boxStart[0]; x <= boxEnd[0]; x++)
+			{
+				if (x == image->getWidth() || y == image->getHeight())
+				{
+					continue;
+				}
+				if (PointInTriangle(x, y, v1x, v1y, v2x, v2y, v3x, v3y))
+				{
+					float green = calculateColor(area, x, y, v1x, v1y, v3x, v3y);
+					float blue = calculateColor(area, x, y, v1x, v1y, v2x, v2y);
+					float red = calculateColor(area, x, y, v2x, v2y, v3x, v3y);
+					image->setPixel(x, y, 255*red, 255*green, 255*blue);
+				}
+			}
+		}
+	}
 	//write out the image
    image->writeToFile(imgName);
 
