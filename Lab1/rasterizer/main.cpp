@@ -126,15 +126,8 @@ int calculateArea(int v1x, int v1y, int v1z, int v2x, int v2y, int v2z, int v3x,
 }
 int main(int argc, char **argv)
 {
-	/*if(argc < 3) {
-      cout << "Usage: Assignment1 meshfile imagefile" << endl;
-      return 0;
-   }*/
-	// OBJ filename
-	/*string meshName(argv[1]);
-	string imgName(argv[2]);*/
 
-	//SWITCH BACK WHEN DONE !!!!!!!!!!!!!!!!!!!!!!!!!!!
+	// Inputs and Outputs
 	string meshName("tri.obj");
 	string imgName("result.png");
 
@@ -200,18 +193,7 @@ int main(int argc, char **argv)
 				v3z = (posBuf.at(x + 2) + 1) * 50;
 			}
 		}
-		/*cout << "Vertex 1" << endl;
-		cout << v1x << endl;
-		cout << v1y << endl;
-		cout << v1z << endl;
-		cout << "Vertex 2" << endl;
-		cout << v2x << endl;
-		cout << v2y << endl;
-		cout << v2z << endl;
-		cout << "Vertex 3" << endl;
-		cout << v3x << endl;
-		cout << v3y << endl;
-		cout << v3z << endl;*/
+
 
 		int area = calculateArea(v1x, v1y, v1z, v2x, v2y, v2z, v3x, v3y, v3z);
 
@@ -229,13 +211,7 @@ int main(int argc, char **argv)
 		int boxStart[2] = { startx, starty };
 		int boxEnd[2] = { endx, endy };
 
-		/*cout << "Start" << endl;
-		cout << boxStart[0] << endl;
-		cout << boxStart[1] << endl;
-
-		cout << "End" << endl;
-		cout << boxEnd[0] << endl;
-		cout << boxEnd[1] << endl;*/
+	
 		for (int y = boxStart[1]; y >= boxEnd[1]; y--)
 		{
 			for (int x = boxStart[0]; x <= boxEnd[0]; x++)
@@ -250,6 +226,9 @@ int main(int argc, char **argv)
 					float blue = calculateColor(area, x, y, v1x, v1y, v2x, v2y);
 					float red = calculateColor(area, x, y, v2x, v2y, v3x, v3y);
 					image->setPixel(x, y, 255*red, 255*green, 255*blue);
+
+					//For producing red Triangle, just use one line of code which is below
+					/*image->setPixel(x, y, 255, 0, 0);*/
 				}
 			}
 		}
