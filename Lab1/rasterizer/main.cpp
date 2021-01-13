@@ -103,24 +103,24 @@ bool PointInTriangle(float ptx, float pty, float v1x, float v1y, float v2x, floa
 }
 
 
-double calculateColor(double area, float ptx, float pty, float v1x, float v1y, float v2x, float v2y)
+float calculateColor(float area, float ptx, float pty, float v1x, float v1y, float v2x, float v2y)
 {
-	double one = (double)v2x - (double)v1x;
-	double two = (double)ptx - (double)v1x;
-	double three = (double)v2y - (double)v1y;
-	double four = (double)pty - (double)v1y;
-	double redArea = one * four - three * two;
+	float one = v2x - v1x;
+	float two = ptx - v1x;
+	float three = v2y - v1y;
+	float four = pty - v1y;
+	float redArea = one * four - three * two;
 	redArea = (abs(redArea)) / 2.0;
-	double solution = (redArea / area);
+	float solution = (redArea / area);
 	return solution;
 }
-double calculateArea(float v1x, float v1y, float v1z, float v2x, float v2y, float v2z, float v3x, float v3y, float v3z)
+float calculateArea(float v1x, float v1y, float v1z, float v2x, float v2y, float v2z, float v3x, float v3y, float v3z)
 {
-	double one = (double)v2x - (double)v1x;
-	double two = (double)v3x - (double)v1x;
-	double three = (double)v2y - (double)v1y;
-	double four = (double)v3y - (double)v1y;
-	double solution = one * four - three * two; 
+	float one = v2x - v1x;
+	float two = v3x - v1x;
+	float three = v2y - v1y;
+	float four = v3y - v1y;
+	float solution = one * four - three * two; 
 	solution = abs(solution) / 2;
 	return solution;
 }
@@ -129,9 +129,9 @@ class v3d
 public:
 	float x, y, z;
 };
-double calculateRange(double z)
+float calculateRange(float z)
 {
-	double result = (((z + 1.0) * 255.0) / 2.0);
+	float result = (((z + 1) * 255) / 2);
 	return result;
 }
 int main(int argc, char **argv)
@@ -139,10 +139,9 @@ int main(int argc, char **argv)
 
 	// Inputs and Outputs
 	string meshName("bunny.obj");
-	string imgName("resultRed.png");
+	string imgName("resultRed2.png");
 	//set g_width and g_height appropriately!
 	g_width = g_height = 100;
-
    //create an image
 	auto image = make_shared<Image>(g_width, g_height);
 
@@ -209,7 +208,7 @@ int main(int argc, char **argv)
 		v3z= (c.z + 1) * 50;
 
 
-		double area = calculateArea(a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z);
+		float area = calculateArea(a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z);
 		/*double area = calculateArea(v1x, v1y, v1z, v2x, v2y, v2z, v3x, v3y, v3z);*/
 
 		int startx = min(v1x, v2x);
@@ -239,24 +238,21 @@ int main(int argc, char **argv)
 				float yfloat = (y / 50.0) - 1.0;
 				if (PointInTriangle(xfloat, yfloat, a.x, a.y, b.x, b.y, c.x, c.y))
 				{
-					////For producing COLORED Triangle
 					
-					double red1 = calculateColor(area, xfloat, yfloat, a.x, a.y, c.x, c.y);
-					double red2 = calculateColor(area, xfloat, yfloat, a.x, a.y, b.x, b.y);
-					double red3 = calculateColor(area, xfloat, yfloat, b.x, b.y, c.x, c.y);
-					double convertz1 = calculateRange(a.z);
-					double convertz2 = calculateRange(b.z);
-					double convertz3 = calculateRange(c.z);
-					double total = convertz2*red1 + convertz3*red2 + convertz1*red3;
-					//image->setPixel(x, y, 255*red, 255*green, 255*blue);
-					double pixelColor = zbuffer->getPixel(x, y);
+					float red1 = calculateColor(area, xfloat, yfloat, a.x, a.y, c.x, c.y);
+					float red2 = calculateColor(area, xfloat, yfloat, a.x, a.y, b.x, b.y);
+					float red3 = calculateColor(area, xfloat, yfloat, b.x, b.y, c.x, c.y);
+					float convertz1 = calculateRange(a.z);
+					float convertz2 = calculateRange(b.z);
+					float convertz3 = calculateRange(c.z);
+					float total = convertz2*red1 + convertz3*red2 + convertz1*red3;
+					float pixelColor = zbuffer->getPixel(x, y);
 					if (total >= pixelColor)
 					{
 						zbuffer->setPixel(x, y, total, 0, 0);
 						image->setPixel(x, y, total, 0, 0);
 					}
-					//For producing red Triangle, just use one line of code which is below
-					//image->setPixel(x, y, 255, 0, 0);
+
 				}
 			}
 		}
