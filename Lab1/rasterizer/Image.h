@@ -12,6 +12,7 @@ public:
 	virtual ~Image();
 	void setPixel(int x, int y, unsigned char r, unsigned char g, unsigned char b);
 	void writeToFile(const std::string &filename);
+	double getPixel(int x, int y);
 	int getWidth() const { return width; }
 	int getHeight() const { return height; }
 

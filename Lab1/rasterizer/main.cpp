@@ -82,14 +82,14 @@ void resize_obj(std::vector<tinyobj::shape_t> &shapes){
    }
 }
 
-float sign(int p1x, int p1y, int p2x, int p2y, int p3x, int p3y)
+float sign(float p1x, float p1y, float p2x, float p2y, float p3x, float p3y)
 {
 	return (p1x - p3x) * (p2y - p3y) - (p2x - p3x) * (p1y - p3y);
 }
 
-bool PointInTriangle(int ptx, int pty, int v1x, int v1y, int v2x, int v2y, int v3x, int v3y)
+bool PointInTriangle(float ptx, float pty, float v1x, float v1y, float v2x, float v2y, float v3x, float v3y)
 {
-	int d1, d2, d3;
+	float d1, d2, d3;
 	bool has_neg, has_pos;
 
 	d1 = sign(ptx, pty, v1x, v1y, v2x, v2y);
@@ -103,40 +103,58 @@ bool PointInTriangle(int ptx, int pty, int v1x, int v1y, int v2x, int v2y, int v
 }
 
 
-float calculateColor(int area, int ptx, int pty, int v1x, int v1y, int v2x, int v2y)
+double calculateColor(double area, float ptx, float pty, float v1x, float v1y, float v2x, float v2y)
 {
-	int one = v2x - v1x;
-	int two = ptx - v1x;
-	int three = v2y - v1y;
-	int four = pty - v1y;
-	float redArea = one * four - three * two;
-	redArea = abs(redArea) / 2;
-	float solution = redArea / area;
+	double one = (double)v2x - (double)v1x;
+	double two = (double)ptx - (double)v1x;
+	double three = (double)v2y - (double)v1y;
+	double four = (double)pty - (double)v1y;
+	double redArea = one * four - three * two;
+	redArea = (abs(redArea)) / 2.0;
+	double solution = (redArea / area);
 	return solution;
 }
-int calculateArea(int v1x, int v1y, int v1z, int v2x, int v2y, int v2z, int v3x, int v3y, int v3z)
+double calculateArea(float v1x, float v1y, float v1z, float v2x, float v2y, float v2z, float v3x, float v3y, float v3z)
 {
-	int one = v2x - v1x;
-	int two = v3x - v1x;
-	int three = v2y - v1y;
-	int four = v3y - v1y;
-	int solution = one * four - three * two; 
+	double one = (double)v2x - (double)v1x;
+	double two = (double)v3x - (double)v1x;
+	double three = (double)v2y - (double)v1y;
+	double four = (double)v3y - (double)v1y;
+	double solution = one * four - three * two; 
 	solution = abs(solution) / 2;
 	return solution;
+}
+class v3d
+{
+public:
+	float x, y, z;
+};
+double calculateRange(double z)
+{
+	double result = (((z + 1.0) * 255.0) / 2.0);
+	return result;
 }
 int main(int argc, char **argv)
 {
 
 	// Inputs and Outputs
-	string meshName("tri.obj");
-	string imgName("result.png");
-
+	string meshName("bunny.obj");
+	string imgName("resultRed.png");
 	//set g_width and g_height appropriately!
 	g_width = g_height = 100;
 
    //create an image
 	auto image = make_shared<Image>(g_width, g_height);
 
+	auto zbuffer = make_shared<Image>(g_width, g_height);
+	for (int y = 0; y < g_height; y++)
+	{
+		for (int x = 0; x < g_width; x++)
+		{
+			zbuffer->setPixel(x, y, 0, 0, 0);
+		}
+
+	}
 	// triangle buffer
 	vector<unsigned int> triBuf;
 	// position buffer
@@ -159,43 +177,40 @@ int main(int argc, char **argv)
 	}
 	cout << "Number of vertices: " << posBuf.size()/3 << endl;
 	cout << "Number of triangles: " << triBuf.size()/3 << endl;
-
-	//TODO add code to iterate through each triangle and rasterize it 
-	for (int tri = 0; tri < triBuf.size() / 3; tri++)
+	
+	v3d* vertices = new v3d[(posBuf.size()/3)];
+	
+	int arrayIndex = 0;
+	for (int ind = 0; ind < posBuf.size(); ind += 3)
 	{
-		int v1x;
-		int v1y;
-		int v1z;
-		int v2x;
-		int v2y;
-		int v2z;
-		int v3x;
-		int v3y;
-		int v3z;
-		for (int x = 0; x <= posBuf.size(); x += 3)
-		{
-			if (x == 0)
-			{
-				v1x = (posBuf.at(x) + 1) * 50;
-				v1y = (posBuf.at(x + 1) + 1) * 50;
-				v1z = (posBuf.at(x + 2) + 1) * 50;
-			}
-			if (x == 3)
-			{
-				v2x = (posBuf.at(x) + 1) * 50;
-				v2y = (posBuf.at(x + 1) + 1) * 50;
-				v2z = (posBuf.at(x + 2) + 1) * 50;
-			}
-			if (x == 6)
-			{
-				v3x = (posBuf.at(x) + 1) * 50;
-				v3y = (posBuf.at(x + 1) + 1) * 50;
-				v3z = (posBuf.at(x + 2) + 1) * 50;
-			}
-		}
+		vertices[arrayIndex].x = posBuf[ind + 0];
+		vertices[arrayIndex].y = posBuf[ind + 1];
+		vertices[arrayIndex].z = posBuf[ind + 2];
+		arrayIndex += 1;
+	}
+	//TODO add code to iterate through each triangle and rasterize it
+	for (int i = 0; i < triBuf.size(); i+=3)
+	{
+		v3d a, b, c;
+		int v1x, v1y, v1z, v2x, v2y, v2z, v3x, v3y, v3z;
+
+		a = vertices[triBuf[i + 0]];
+		b = vertices[triBuf[i + 1]];
+		c = vertices[triBuf[i + 2]];
+	
+		v2x = (b.x + 1) * 50;
+		v3x = (c.x + 1) * 50;
+		v1y = (a.y + 1) * 50;
+		v1x = (a.x + 1) * 50;
+		v2y = (b.y + 1) * 50;
+		v3y = (c.y + 1) * 50;
+		v1z= (a.z + 1) * 50;
+		v2z= (b.z + 1) * 50;
+		v3z= (c.z + 1) * 50;
 
 
-		int area = calculateArea(v1x, v1y, v1z, v2x, v2y, v2z, v3x, v3y, v3z);
+		double area = calculateArea(a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z);
+		/*double area = calculateArea(v1x, v1y, v1z, v2x, v2y, v2z, v3x, v3y, v3z);*/
 
 		int startx = min(v1x, v2x);
 		startx = min(startx, v3x);
@@ -220,21 +235,34 @@ int main(int argc, char **argv)
 				{
 					continue;
 				}
-				if (PointInTriangle(x, y, v1x, v1y, v2x, v2y, v3x, v3y))
+				float xfloat = (x / 50.0) - 1.0;
+				float yfloat = (y / 50.0) - 1.0;
+				if (PointInTriangle(xfloat, yfloat, a.x, a.y, b.x, b.y, c.x, c.y))
 				{
-					float green = calculateColor(area, x, y, v1x, v1y, v3x, v3y);
-					float blue = calculateColor(area, x, y, v1x, v1y, v2x, v2y);
-					float red = calculateColor(area, x, y, v2x, v2y, v3x, v3y);
-					image->setPixel(x, y, 255*red, 255*green, 255*blue);
-
+					////For producing COLORED Triangle
+					
+					double red1 = calculateColor(area, xfloat, yfloat, a.x, a.y, c.x, c.y);
+					double red2 = calculateColor(area, xfloat, yfloat, a.x, a.y, b.x, b.y);
+					double red3 = calculateColor(area, xfloat, yfloat, b.x, b.y, c.x, c.y);
+					double convertz1 = calculateRange(a.z);
+					double convertz2 = calculateRange(b.z);
+					double convertz3 = calculateRange(c.z);
+					double total = convertz2*red1 + convertz3*red2 + convertz1*red3;
+					//image->setPixel(x, y, 255*red, 255*green, 255*blue);
+					double pixelColor = zbuffer->getPixel(x, y);
+					if (total >= pixelColor)
+					{
+						zbuffer->setPixel(x, y, total, 0, 0);
+						image->setPixel(x, y, total, 0, 0);
+					}
 					//For producing red Triangle, just use one line of code which is below
-					/*image->setPixel(x, y, 255, 0, 0);*/
+					//image->setPixel(x, y, 255, 0, 0);
 				}
 			}
 		}
 	}
 	//write out the image
-   image->writeToFile(imgName);
-
-	return 0;
+    image->writeToFile(imgName);
+   
+   return 0;
 }

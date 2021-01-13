@@ -19,6 +19,13 @@ Image::~Image()
 {
 }
 
+double Image::getPixel(int x, int y)
+{
+	y = height - y - 1;
+	int index = y * width + x;
+	double solution = pixels[3 * index + 0];
+	return solution;
+}
 void Image::setPixel(int x, int y, unsigned char r, unsigned char g, unsigned char b)
 {
 	// The pixel data is laid out row by row. Each row consists of 'width'
