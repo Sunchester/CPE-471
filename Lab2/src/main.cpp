@@ -27,10 +27,11 @@ public:
 	std::shared_ptr<Program> prog;
 
 	// Contains vertex information for OpenGL
-	GLuint VertexArrayID;
+	GLuint VertexArrayID, VertexArrayID2, VertexArrayID3;
 
 	// Data necessary to give our triangle to OpenGL
-	GLuint VertexBufferID;
+	GLuint VertexBufferID, VertexBufferID2, VertexBufferID3;
+	GLuint VBOcolor;
 
 	void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
 	{
@@ -99,6 +100,113 @@ public:
 		//key function to get up how many elements to pull out at a time (3)
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*) 0);
 
+		//generate vertex buffer to hand off to OGL
+		glGenBuffers(1, &VBOcolor);
+		//set the current state to focus on our vertex buffer
+		glBindBuffer(GL_ARRAY_BUFFER, VBOcolor);
+
+		static const GLfloat colors[] =
+		{
+			1.0f, 1.0f, 0.0f,
+			0.0f, 1.0f, 0.0f,
+			0.0f, 0.0f, 1.0f
+		};
+		//actually memcopy the data - only do this once
+		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 9, colors, GL_DYNAMIC_DRAW);
+
+		//we need to set up the vertex array
+		glEnableVertexAttribArray(1);
+		//key function to get up how many elements to pull out at a time (3)
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+
+
+		glBindVertexArray(0);
+
+		//generate the VAO
+		glGenVertexArrays(1, &VertexArrayID2);
+		glBindVertexArray(VertexArrayID2);
+
+		//generate vertex buffer to hand off to OGL
+		glGenBuffers(1, &VertexBufferID2);
+		//set the current state to focus on our vertex buffer
+		glBindBuffer(GL_ARRAY_BUFFER, VertexBufferID2);
+
+		static const GLfloat g_vertex_buffer_data2[] =
+		{
+			-1.0f, -0.5f, 0.0f,
+			-1.0f, 0.7f, 0.0f,
+			-0.05f, 0.7f, 0.0f
+		};
+		//actually memcopy the data - only do this once
+		glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data2), g_vertex_buffer_data2, GL_DYNAMIC_DRAW);
+
+		//we need to set up the vertex array
+		glEnableVertexAttribArray(0);
+		//key function to get up how many elements to pull out at a time (3)
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+
+		//generate vertex buffer to hand off to OGL
+		glGenBuffers(1, &VBOcolor);
+		//set the current state to focus on our vertex buffer
+		glBindBuffer(GL_ARRAY_BUFFER, VBOcolor);
+
+		static const GLfloat colors2[] =
+		{
+			0.0f, 1.0f, 0.0f,
+			0.0f, 0.0f, 1.0f,
+			0.0f, 0.0f, 1.0f
+		};
+		//actually memcopy the data - only do this once
+		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 9, colors2, GL_DYNAMIC_DRAW);
+
+		//we need to set up the vertex array
+		glEnableVertexAttribArray(1);
+		//key function to get up how many elements to pull out at a time (3)
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+
+
+		glBindVertexArray(0);
+
+		//generate the VAO
+		glGenVertexArrays(1, &VertexArrayID3);
+		glBindVertexArray(VertexArrayID3);
+
+		//generate vertex buffer to hand off to OGL
+		glGenBuffers(1, &VertexBufferID3);
+		//set the current state to focus on our vertex buffer
+		glBindBuffer(GL_ARRAY_BUFFER, VertexBufferID3);
+
+		static const GLfloat g_vertex_buffer_data3[] =
+		{
+			1.0f, -0.5f, 0.0f,
+			1.0f, 0.7f, 0.0f,
+			0.05f, 0.7f, 0.0f
+		};
+		//actually memcopy the data - only do this once
+		glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data3), g_vertex_buffer_data3, GL_DYNAMIC_DRAW);
+
+		//we need to set up the vertex array
+		glEnableVertexAttribArray(0);
+		//key function to get up how many elements to pull out at a time (3)
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+
+		//generate vertex buffer to hand off to OGL
+		glGenBuffers(1, &VBOcolor);
+		//set the current state to focus on our vertex buffer
+		glBindBuffer(GL_ARRAY_BUFFER, VBOcolor);
+
+		//actually memcopy the data - only do this once
+		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 9, colors2, GL_DYNAMIC_DRAW);
+
+		//we need to set up the vertex array
+		glEnableVertexAttribArray(1);
+		//key function to get up how many elements to pull out at a time (3)
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
 		glBindVertexArray(0);
 
 	}
@@ -109,7 +217,8 @@ public:
 		GLSL::checkVersion();
 
 		// Set background color.
-		glClearColor(0.9f, 0.2f, 0.0f, 1.0f);
+		//glClearColor(0.9f, 0.2f, 0.0f, 1.0f);
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 		// Enable z-buffer test.
 		glEnable(GL_DEPTH_TEST);
 
@@ -121,7 +230,9 @@ public:
 		prog->addUniform("P");
 		prog->addUniform("V");
 		prog->addUniform("M");
+		prog->addUniform("yWindow");
 		prog->addAttribute("vertPos");
+		prog->addAttribute("vertCol");
 	}
 
 
@@ -156,16 +267,24 @@ public:
 		// Draw the triangle using GLSL.
 		prog->bind();
 
+		float yHeight = height / 2;
 		//send the matrices to the shaders
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &PP[0][0]);
 		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
 		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform1f(prog->getUniform("yWindow"), yHeight);
 
 		glBindVertexArray(VertexArrayID);
 
 		//actually draw from vertex 0, 3 vertices
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 
+
+		glBindVertexArray(VertexArrayID2);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+
+		glBindVertexArray(VertexArrayID3);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
 		glBindVertexArray(0);
 
 		prog->unbind();
@@ -188,6 +307,7 @@ int main(int argc, char **argv)
 		and GL context, etc. */
 	WindowManager * windowManager = new WindowManager();
 	windowManager->init(640, 480);
+	/*windowManager->init(1920, 1080);*/
 	windowManager->setEventCallbacks(application);
 	application->windowManager = windowManager;
 
