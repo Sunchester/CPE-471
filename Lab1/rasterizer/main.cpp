@@ -139,9 +139,10 @@ int main(int argc, char **argv)
 
 	// Inputs and Outputs
 	string meshName("bunny.obj");
-	string imgName("resultRed2.png");
+	string imgName("result.png");
 	//set g_width and g_height appropriately!
-	g_width = g_height = 100;
+	g_width = 800;
+	g_height = 800;
    //create an image
 	auto image = make_shared<Image>(g_width, g_height);
 
@@ -197,15 +198,15 @@ int main(int argc, char **argv)
 		b = vertices[triBuf[i + 1]];
 		c = vertices[triBuf[i + 2]];
 	
-		v2x = (b.x + 1) * 50;
-		v3x = (c.x + 1) * 50;
-		v1y = (a.y + 1) * 50;
-		v1x = (a.x + 1) * 50;
-		v2y = (b.y + 1) * 50;
-		v3y = (c.y + 1) * 50;
-		v1z= (a.z + 1) * 50;
-		v2z= (b.z + 1) * 50;
-		v3z= (c.z + 1) * 50;
+		v2x = (b.x + 1) * 400;
+		v3x = (c.x + 1) * 400;
+		v1y = (a.y + 1) * 400;
+		v1x = (a.x + 1) * 400;
+		v2y = (b.y + 1) * 400;
+		v3y = (c.y + 1) * 400;
+		v1z= (a.z + 1) * 400;
+		v2z= (b.z + 1) * 400;
+		v3z= (c.z + 1) * 400;
 
 
 		float area = calculateArea(a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z);
@@ -234,8 +235,8 @@ int main(int argc, char **argv)
 				{
 					continue;
 				}
-				float xfloat = (x / 50.0) - 1.0;
-				float yfloat = (y / 50.0) - 1.0;
+				float xfloat = (x / 400.0) - 1.0;
+				float yfloat = (y / 400.0) - 1.0;
 				if (PointInTriangle(xfloat, yfloat, a.x, a.y, b.x, b.y, c.x, c.y))
 				{
 					
