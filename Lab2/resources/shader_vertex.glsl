@@ -8,6 +8,7 @@ out vec3 vertex_to_fragment_color;
 out vec3 vertex_to_pixel_position;
 void main()
 {
+	
 	gl_Position = P * V * M * vec4(vertPos, 1.0);
 	vertex_to_fragment_color = vertCol;
 	vertex_to_pixel_position = vertPos;

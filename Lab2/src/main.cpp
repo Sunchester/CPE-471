@@ -231,6 +231,7 @@ public:
 		prog->addUniform("V");
 		prog->addUniform("M");
 		prog->addUniform("yWindow");
+		prog->addUniform("time");
 		prog->addAttribute("vertPos");
 		prog->addAttribute("vertCol");
 	}
@@ -266,6 +267,7 @@ public:
 	
 		// Draw the triangle using GLSL.
 		prog->bind();
+		double time = glfwGetTime();
 
 		float yHeight = height / 2;
 		//send the matrices to the shaders
@@ -273,7 +275,7 @@ public:
 		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
 		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
 		glUniform1f(prog->getUniform("yWindow"), yHeight);
-
+		glUniform1f(prog->getUniform("time"), time);
 		glBindVertexArray(VertexArrayID);
 
 		//actually draw from vertex 0, 3 vertices
