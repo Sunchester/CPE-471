@@ -54,8 +54,8 @@ public:
 
 			//change this to be the points converted to WORLD
 			//THIS IS BROKEN< YOU GET TO FIX IT - yay!
-			newPt[0] = 0;
-			newPt[1] = 0;
+			newPt[0] = (posX/640.0 - 0.5)* 2;
+			newPt[1] = -1 *(posY/480.0 - 0.5) *2;
 
 			std::cout << "converted:" << newPt[0] << " " << newPt[1] << std::endl;
 			glBindBuffer(GL_ARRAY_BUFFER, VertexBufferID);
