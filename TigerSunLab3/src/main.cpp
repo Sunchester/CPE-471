@@ -7,8 +7,6 @@ ZJ Wood CPE 471 Lab 3 base code
 
 #include "GLSL.h"
 #include "Program.h"
-#include "MatrixStack.h"
-
 #include "WindowManager.h"
 
 // value_ptr for glm
@@ -24,14 +22,13 @@ public:
 	WindowManager * windowManager = nullptr;
 
 	// Our shader program
-	std::shared_ptr<Program> prog;
+	Program prog;
 
 	// Contains vertex information for OpenGL
 	GLuint VertexArrayID;
 
-	// Data necessary to give our triangle to OpenGL
-	GLuint VertexBufferID;
-	GLuint VBOcolor;
+	// Data necessary to give our box to OpenGL
+	GLuint VertexBufferID, VertexColorIDBox, IndexBufferIDBox;
 
 	void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
 	{
@@ -51,17 +48,6 @@ public:
 		{
 			glfwGetCursorPos(window, &posX, &posY);
 			std::cout << "Pos X " << posX <<  " Pos Y " << posY << std::endl;
-
-			//change this to be the points converted to WORLD
-			//THIS IS BROKEN< YOU GET TO FIX IT - yay!
-			newPt[0] = (posX/640.0 - 0.5)* 2;
-			newPt[1] = -1 *(posY/480.0 - 0.5) *2;
-
-			std::cout << "converted:" << newPt[0] << " " << newPt[1] << std::endl;
-			glBindBuffer(GL_ARRAY_BUFFER, VertexBufferID);
-			//update the vertex array with the updated points
-			glBufferSubData(GL_ARRAY_BUFFER, sizeof(float)*6, sizeof(float)*2, newPt);
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
 		}
 	}
 
@@ -81,60 +67,81 @@ public:
 		glGenVertexArrays(1, &VertexArrayID);
 		glBindVertexArray(VertexArrayID);
 
-		//generate vertex buffer to hand off to OGL
+
 		glGenBuffers(1, &VertexBufferID);
-		//set the current state to focus on our vertex buffer
 		glBindBuffer(GL_ARRAY_BUFFER, VertexBufferID);
 
-		static const GLfloat g_vertex_buffer_data[] =
-		{
-			-0.5f, -0.5f, 0.0f,
-			0.5f, -0.5f, 0.0f,
-			0.0f, 0.7f, 0.0f,
-			-1.0f, -0.5f, 0.0f,
-			-1.0f, 0.7f, 0.0f,
-			-0.05f, 0.7f, 0.0f,
-			1.0f, -0.5f, 0.0f,
-			1.0f, 0.7f, 0.0f,
-			0.05f, 0.7f, 0.0f
+		GLfloat cube_vertices[] = {
+			// front
+			-1.0, -1.0,  1.0,
+			1.0, -1.0,  1.0,
+			1.0,  1.0,  1.0,
+			-1.0,  1.0,  1.0,
+			// back
+			-1.0, -1.0, -1.0,
+			1.0, -1.0, -1.0,
+			1.0,  1.0, -1.0,
+			-1.0,  1.0, -1.0,
 		};
+		//make it a bit smaller
+		for (int i = 0; i < 24; i++)
+			cube_vertices[i] *= 0.5;
 		//actually memcopy the data - only do this once
-		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat)*27, g_vertex_buffer_data, GL_DYNAMIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(cube_vertices), cube_vertices, GL_DYNAMIC_DRAW);
 
 		//we need to set up the vertex array
 		glEnableVertexAttribArray(0);
 		//key function to get up how many elements to pull out at a time (3)
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*) 0);
 
-		//generate vertex buffer to hand off to OGL
-		glGenBuffers(1, &VBOcolor);
-		//set the current state to focus on our vertex buffer
-		glBindBuffer(GL_ARRAY_BUFFER, VBOcolor);
-
-		static const GLfloat colors[] =
-		{
-			1.0f, 1.0f, 0.0f,
-			0.0f, 1.0f, 0.0f,
-			0.0f, 0.0f, 1.0f,
-			0.0f, 1.0f, 0.0f,
-			0.0f, 0.0f, 1.0f,
-			0.0f, 0.0f, 1.0f,
-			0.0f, 1.0f, 0.0f,
-			0.0f, 0.0f, 1.0f,
-			0.0f, 0.0f, 1.0f
+		//color
+		GLfloat cube_colors[] = {
+			// front colors
+			1.0, 0.0, 0.0,
+			0.0, 1.0, 0.0,
+			0.0, 0.0, 1.0,
+			1.0, 1.0, 1.0,
+			// back colors
+			1.0, 0.0, 0.0,
+			0.0, 1.0, 0.0,
+			0.0, 0.0, 1.0,
+			1.0, 1.0, 1.0,
 		};
-		//actually memcopy the data - only do this once
-		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 27, colors, GL_DYNAMIC_DRAW);
-
-		//we need to set up the vertex array
+		glGenBuffers(1, &VertexColorIDBox);
+		//set the current state to focus on our vertex buffer
+		glBindBuffer(GL_ARRAY_BUFFER, VertexColorIDBox);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(cube_colors), cube_colors, GL_STATIC_DRAW);
 		glEnableVertexAttribArray(1);
-		//key function to get up how many elements to pull out at a time (3)
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
+		glGenBuffers(1, &IndexBufferIDBox);
+		//set the current state to focus on our vertex buffer
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBufferIDBox);
+		GLushort cube_elements[] = {
+			// front
+			0, 1, 2,
+			2, 3, 0,
+			// top
+			1, 5, 6,
+			6, 2, 1,
+			// back
+			7, 6, 5,
+			5, 4, 7,
+			// bottom
+			4, 0, 3,
+			3, 7, 4,
+			// left
+			4, 5, 1,
+			1, 0, 4,
+			// right
+			3, 2, 6,
+			6, 7, 3,
+		};
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cube_elements), cube_elements, GL_STATIC_DRAW);
 
 
 		glBindVertexArray(0);
-		
+
 	}
 
 	//General OGL initialization - set OGL state here
@@ -143,23 +150,24 @@ public:
 		GLSL::checkVersion();
 
 		// Set background color.
-		//glClearColor(0.9f, 0.2f, 0.0f, 1.0f);
-		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		// Enable z-buffer test.
 		glEnable(GL_DEPTH_TEST);
 
 		// Initialize the GLSL program.
-		prog = std::make_shared<Program>();
-		prog->setVerbose(true);
-		prog->setShaderNames(resourceDirectory + "/shader_vertex.glsl", resourceDirectory + "/shader_fragment.glsl");
-		prog->init();
-		prog->addUniform("P");
-		prog->addUniform("V");
-		prog->addUniform("M");
-		prog->addUniform("yWindow");
-		prog->addUniform("time");
-		prog->addAttribute("vertPos");
-		prog->addAttribute("vertCol");
+		
+		prog.setVerbose(true);
+		prog.setShaderNames(resourceDirectory + "/shader_vertex.glsl", resourceDirectory + "/shader_fragment.glsl");
+		if (!prog.init())
+			{
+			std::cerr << "One or more shaders failed to compile... exiting!" << std::endl;
+			exit(1); //[SHADERBUG] ? breakpoint here!! if program hits that codeline, check the command line window, it will contain the line and place of the error in the shader file
+			}
+		prog.addUniform("P");
+		prog.addUniform("V");
+		prog.addUniform("M");
+		prog.addAttribute("vertPos");
+		prog.addAttribute("vertColor");
 	}
 
 
@@ -179,41 +187,37 @@ public:
 		// Clear framebuffer.
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// Create the matrix stacks - please leave these alone for now
+		// Create the matrices
 		
-		glm::mat4 V, M, PP;
+		glm::mat4 V, M, P; //View, Model and Perspective matrix
 		V = glm::mat4(1);
 		M = glm::mat4(1);
-		// Apply orthographic projection.
-		PP = glm::ortho(-1 * aspect, 1 * aspect, -1.0f, 1.0f, -2.0f, 100.0f);		
+		// Apply orthographic projection....
+		P = glm::ortho(-1 * aspect, 1 * aspect, -1.0f, 1.0f, -2.0f, 100.0f);		
 		if (width < height)
-		{
-		PP = glm::ortho(-1.0f, 1.0f, -1.0f / aspect,  1.0f / aspect, -2.0f, 100.0f);
-		}
-	
-		// Draw the triangle using GLSL.
-		prog->bind();
-		double time = glfwGetTime();
+			P = glm::ortho(-1.0f, 1.0f, -1.0f / aspect,  1.0f / aspect, -2.0f, 100.0f);
+		// ...but we overwrite it (optional) with a perspective projection.
+		P = glm::perspective((float)(3.14159 / 4.), (float)((float)width/ (float)height), 0.1f, 100.0f); //so much type casting... GLM metods are quite funny ones
 
-		float yHeight = height / 2;
-		//send the matrices to the shaders
-		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &PP[0][0]);
-		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
-		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
-		glUniform1f(prog->getUniform("yWindow"), yHeight);
-		glUniform1f(prog->getUniform("time"), time);
+		
+		// Draw the box using GLSL.
+		prog.bind();
+
+		//bind the cube's VAO:
 		glBindVertexArray(VertexArrayID);
+		
+		//send the matrices to the shaders
+		glUniformMatrix4fv(prog.getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog.getUniform("V"), 1, GL_FALSE, &V[0][0]);
 
-		//actually draw from vertex 0, 3 vertices
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		//set model matrix and draw the cube		
+		//M = ...
+		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &M[0][0]);	
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
 
-
-		glDrawArrays(GL_TRIANGLES, 3, 3);
-
-		glDrawArrays(GL_TRIANGLES, 6, 3);
 		glBindVertexArray(0);
 
-		prog->unbind();
+		prog.unbind();
 
 	}
 
@@ -233,7 +237,6 @@ int main(int argc, char **argv)
 		and GL context, etc. */
 	WindowManager * windowManager = new WindowManager();
 	windowManager->init(640, 480);
-	/*windowManager->init(1920, 1080);*/
 	windowManager->setEventCallbacks(application);
 	application->windowManager = windowManager;
 
