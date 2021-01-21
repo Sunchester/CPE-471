@@ -12,8 +12,7 @@ ZJ Wood CPE 471 Lab 3 base code
 // value_ptr for glm
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
-
+using namespace glm;
 class Application : public EventCallbacks
 {
 
@@ -199,7 +198,6 @@ public:
 		// ...but we overwrite it (optional) with a perspective projection.
 		P = glm::perspective((float)(3.14159 / 4.), (float)((float)width/ (float)height), 0.1f, 100.0f); //so much type casting... GLM metods are quite funny ones
 
-		
 		// Draw the box using GLSL.
 		prog.bind();
 
@@ -212,8 +210,46 @@ public:
 
 		//set model matrix and draw the cube		
 		//M = ...
+
+		// H leg, 1 of 2
+		mat4 R, S, Tone, Ttwo, tR;
+		tR = rotate(mat4(1), 0.25f, vec3(0, 1, 0));
+
+		Tone = translate(mat4(1), vec3(0, 0, -3));
+		Ttwo = translate(mat4(1), vec3(-0.50, 0, 0));
+		//R = rotate(mat4(1), (float)5, vec3(0, 1, 0));
+		S = scale(mat4(1), vec3(0.2, 1, 0.25));
+		M = Tone * tR *Ttwo * S;
 		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &M[0][0]);	
 		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+		// H leg, 2 of 2 
+		Tone = translate(mat4(1), vec3(0, 0, -3));
+		Ttwo = translate(mat4(1), vec3(0, 0, 0));
+		S = scale(mat4(1), vec3(0.2, 1, 0.25));
+		M = Tone * tR *Ttwo * S;
+		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+
+		// H bridge, 1 of 1 
+		Tone = translate(mat4(1), vec3(0, 0, -3));
+		Ttwo = translate(mat4(1), vec3(-0.25, 0, 0));
+		S = scale(mat4(1), vec3(0.2, 0.85, 0.125));
+		R = rotate(mat4(1), (float)45, vec3(0, 0, 1));
+		M = Tone * tR *Ttwo * R * S;
+		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+
+		// I, 1 of 1
+		Tone = translate(mat4(1), vec3(0, 0, -3));
+		Ttwo = translate(mat4(1), vec3(0.50, 0, 0));
+		S = scale(mat4(1), vec3(0.2, 1, 0.25));
+		M = Tone * tR *Ttwo * S;
+		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
 
 		glBindVertexArray(0);
 
