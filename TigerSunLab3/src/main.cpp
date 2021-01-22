@@ -13,6 +13,113 @@ ZJ Wood CPE 471 Lab 3 base code
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 using namespace glm;
+class matrix
+{
+	public:
+		float M[4][4];
+		void createIdentityMat()
+		{	
+			for (int i = 0; i < 4; i++)
+			{
+				for (int j = 0; j < 4; j++)
+				{
+					M[i][j] = 0.0f;
+				}
+			}
+			int i2 = 0;
+
+			for (int j2 = 0; j2 < 4; j2++)
+			{
+				M[i2][j2] = 1.0f;
+				i2 += 1;
+			}
+		}
+		void operator=(const matrix& rhs)
+		{
+			for (int i = 0; i < 4; i++)
+			{
+				for (int j = 0; j < 4; j++)
+				{
+					M[i][j] = rhs.M[i][j];
+				}
+			}
+		}
+		void transposeMat()
+		{
+			float copy[4][4];
+			for (int i = 0; i < 4; i++)
+			{
+				for (int j = 0; j < 4; j++)
+				{
+					copy[i][j] = M[i][j];
+				}
+			}
+			for (int mi = 0; mi < 4; mi++)
+			{
+				for (int mj = 0; mj < 4; mj++)
+				{
+					M[mi][mj] = copy[mj][mi];
+				}
+			}
+		}
+		void createTranslateMat(float x, float y, float z)
+		{
+			M[3][0] = x;
+			M[3][1] = y;
+			M[3][2] = z;
+		}
+		void createScaleMat(float x, float y, float z)
+		{
+			M[0][0] = x;
+			M[1][1] = y;
+			M[2][2] = z;
+		}
+		void createRotationMatX(float angle)
+		{
+			M[1][1] = cos(angle);
+			M[1][2] = -1 * sin(angle);
+			M[2][1] = sin(angle);
+			M[2][2] = cos(angle);
+			transposeMat();
+			
+		}
+		void createRotationMatY(float angle)
+		{
+			M[0][0] = cos(angle);
+			M[0][2] = sin(angle);
+			M[2][0] = -1 * sin(angle);
+			M[2][2] = cos(angle);
+			transposeMat();
+
+		}
+		void createRotationMatZ(float angle)
+		{
+			M[0][0] = cos(angle);
+			M[0][1] = -1 * sin(angle);
+			M[1][0] = sin(angle);
+			M[1][1] = cos(angle);
+			transposeMat();
+
+
+		}
+};
+matrix operator*(const matrix& lhs, const matrix& rhs)
+{
+	matrix result;
+	result.createIdentityMat();
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			float first = rhs.M[i][0] * lhs.M[0][j];
+			float second = rhs.M[i][1] * lhs.M[1][j];
+			float third = rhs.M[i][2] * lhs.M[2][j];
+			float fourth = rhs.M[i][3] * lhs.M[3][j];
+			result.M[i][j] = first + second + third + fourth;
+		}
+	}
+	return result;
+}
 class Application : public EventCallbacks
 {
 
@@ -188,16 +295,17 @@ public:
 
 		// Create the matrices
 		
-		glm::mat4 V, M, P; //View, Model and Perspective matrix
+		glm::mat4 V, P; //View, Model and Perspective matrix
+		matrix Model;
+		Model.createIdentityMat();
 		V = glm::mat4(1);
-		M = glm::mat4(1);
+		
 		// Apply orthographic projection....
 		P = glm::ortho(-1 * aspect, 1 * aspect, -1.0f, 1.0f, -2.0f, 100.0f);		
 		if (width < height)
 			P = glm::ortho(-1.0f, 1.0f, -1.0f / aspect,  1.0f / aspect, -2.0f, 100.0f);
 		// ...but we overwrite it (optional) with a perspective projection.
 		P = glm::perspective((float)(3.14159 / 4.), (float)((float)width/ (float)height), 0.1f, 100.0f); //so much type casting... GLM metods are quite funny ones
-
 		// Draw the box using GLSL.
 		prog.bind();
 
@@ -208,46 +316,60 @@ public:
 		glUniformMatrix4fv(prog.getUniform("P"), 1, GL_FALSE, &P[0][0]);
 		glUniformMatrix4fv(prog.getUniform("V"), 1, GL_FALSE, &V[0][0]);
 
-		//set model matrix and draw the cube		
-		//M = ...
 
 		// H leg, 1 of 2
-		mat4 R, S, Tone, Ttwo, tR;
-		tR = rotate(mat4(1), 0.25f, vec3(0, 1, 0));
+		matrix R, S, tR, Tone, Ttwo;
+		Tone.createIdentityMat();
+		Ttwo.createIdentityMat();
+		R.createIdentityMat();
+		S.createIdentityMat();
+		tR.createIdentityMat();
+		tR.createRotationMatY(0.25f);
+		Tone.createTranslateMat(0, 0, -3);
+		Ttwo.createTranslateMat(-0.5, 0, 0);
+		S.createScaleMat(0.2, 1, 0.25);
+		
+		Model = Tone * tR * Ttwo * S;
 
-		Tone = translate(mat4(1), vec3(0, 0, -3));
-		Ttwo = translate(mat4(1), vec3(-0.50, 0, 0));
-		//R = rotate(mat4(1), (float)5, vec3(0, 1, 0));
-		S = scale(mat4(1), vec3(0.2, 1, 0.25));
-		M = Tone * tR *Ttwo * S;
-		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &M[0][0]);	
+		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &(Model.M[0][0]));	
 		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
 
 		// H leg, 2 of 2 
-		Tone = translate(mat4(1), vec3(0, 0, -3));
-		Ttwo = translate(mat4(1), vec3(0, 0, 0));
-		S = scale(mat4(1), vec3(0.2, 1, 0.25));
-		M = Tone * tR *Ttwo * S;
-		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		Tone.createIdentityMat();
+		Ttwo.createIdentityMat();
+		S.createIdentityMat();
+		Tone.createTranslateMat(0, 0, -3);
+		Ttwo.createTranslateMat(0, 0, 0);
+		S.createScaleMat(0.2, 1, 0.25);
+		Model = Tone * tR * Ttwo * S;
+		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &(Model.M[0][0]));
 		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
 
 
 		// H bridge, 1 of 1 
-		Tone = translate(mat4(1), vec3(0, 0, -3));
-		Ttwo = translate(mat4(1), vec3(-0.25, 0, 0));
-		S = scale(mat4(1), vec3(0.2, 0.85, 0.125));
-		R = rotate(mat4(1), (float)45, vec3(0, 0, 1));
-		M = Tone * tR *Ttwo * R * S;
-		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		Tone.createIdentityMat();
+		Ttwo.createIdentityMat();
+		R.createIdentityMat();
+		S.createIdentityMat();
+		Tone.createTranslateMat(0, 0, -3);
+		Ttwo.createTranslateMat(-0.25, 0, 0);	
+		S.createScaleMat(0.2, 0.85, 0.125);
+		R.createRotationMatZ(45.0f);
+		Model = Tone * tR * Ttwo * R * S;
+
+		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &(Model.M[0][0]));
 		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
 
 
 		// I, 1 of 1
-		Tone = translate(mat4(1), vec3(0, 0, -3));
-		Ttwo = translate(mat4(1), vec3(0.50, 0, 0));
-		S = scale(mat4(1), vec3(0.2, 1, 0.25));
-		M = Tone * tR *Ttwo * S;
-		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		Tone.createIdentityMat();
+		Ttwo.createIdentityMat();
+		S.createIdentityMat();
+		Tone.createTranslateMat(0, 0, -3);
+		Ttwo.createTranslateMat(0.5, 0, 0);
+		S.createScaleMat(0.2, 1, 0.25);
+		Model = Tone * tR * Ttwo * S;
+		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &(Model.M[0][0]));
 		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
 
 
