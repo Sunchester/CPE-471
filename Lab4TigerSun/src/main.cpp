@@ -7,119 +7,61 @@ ZJ Wood CPE 471 Lab 3 base code
 
 #include "GLSL.h"
 #include "Program.h"
+#include "MatrixStack.h"
+
 #include "WindowManager.h"
 
 // value_ptr for glm
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-using namespace glm;
-class matrix
+
+double get_last_elapsed_time()
 {
-	public:
-		float M[4][4];
-		void createIdentityMat()
-		{	
-			for (int i = 0; i < 4; i++)
-			{
-				for (int j = 0; j < 4; j++)
-				{
-					M[i][j] = 0.0f;
-				}
-			}
-			int i2 = 0;
-
-			for (int j2 = 0; j2 < 4; j2++)
-			{
-				M[i2][j2] = 1.0f;
-				i2 += 1;
-			}
-		}
-		void operator=(const matrix& rhs)
-		{
-			for (int i = 0; i < 4; i++)
-			{
-				for (int j = 0; j < 4; j++)
-				{
-					M[i][j] = rhs.M[i][j];
-				}
-			}
-		}
-		void transposeMat()
-		{
-			float copy[4][4];
-			for (int i = 0; i < 4; i++)
-			{
-				for (int j = 0; j < 4; j++)
-				{
-					copy[i][j] = M[i][j];
-				}
-			}
-			for (int mi = 0; mi < 4; mi++)
-			{
-				for (int mj = 0; mj < 4; mj++)
-				{
-					M[mi][mj] = copy[mj][mi];
-				}
-			}
-		}
-		void createTranslateMat(float x, float y, float z)
-		{
-			M[3][0] = x;
-			M[3][1] = y;
-			M[3][2] = z;
-		}
-		void createScaleMat(float x, float y, float z)
-		{
-			M[0][0] = x;
-			M[1][1] = y;
-			M[2][2] = z;
-		}
-		void createRotationMatX(float angle)
-		{
-			M[1][1] = cos(angle);
-			M[1][2] = -1 * sin(angle);
-			M[2][1] = sin(angle);
-			M[2][2] = cos(angle);
-			transposeMat();
-			
-		}
-		void createRotationMatY(float angle)
-		{
-			M[0][0] = cos(angle);
-			M[0][2] = sin(angle);
-			M[2][0] = -1 * sin(angle);
-			M[2][2] = cos(angle);
-			transposeMat();
-
-		}
-		void createRotationMatZ(float angle)
-		{
-			M[0][0] = cos(angle);
-			M[0][1] = -1 * sin(angle);
-			M[1][0] = sin(angle);
-			M[1][1] = cos(angle);
-			transposeMat();
-
-
-		}
-};
-matrix &operator*(const matrix lhs, const matrix rhs)
-{
-	matrix result;
-	result.createIdentityMat();
-	for (int i = 0; i < 4; i++)
-	{
-		for (int j = 0; j < 4; j++)
-		{
-			float first = rhs.M[i][0] * lhs.M[0][j];
-			float second = rhs.M[i][1] * lhs.M[1][j];
-			float third = rhs.M[i][2] * lhs.M[2][j];
-			float fourth = rhs.M[i][3] * lhs.M[3][j];
-			result.M[i][j] = first + second + third + fourth;
-		}
-	}
-	return result;
+	static double lasttime = glfwGetTime();
+	double actualtime =glfwGetTime();
+	double difference = actualtime- lasttime;
+	lasttime = actualtime;
+	return difference;
 }
+class camera
+{
+public:
+	glm::vec3 pos, rot;
+	int w, a, s, d;
+	camera()
+	{
+		w = a = s = d = 0;
+		pos = rot = glm::vec3(0, 0, -1);
+	}
+	glm::mat4 process()
+	{
+		double ftime = get_last_elapsed_time();
+		float speed = 0;
+		if (w == 1)
+		{
+			speed = 1*ftime;
+		}
+		else if (s == 1)
+		{
+			speed = -1*ftime;
+		}
+		float yangle=0;
+		if (a == 1)
+			yangle = -1*ftime;
+		else if(d==1)
+			yangle = 1*ftime;
+		rot.y += yangle;
+		glm::mat4 R = glm::rotate(glm::mat4(1), rot.y, glm::vec3(0, 1, 0));
+		glm::vec4 dir = glm::vec4(0, 0, speed,1);
+		dir = dir*R;
+		pos += glm::vec3(dir.x, dir.y, dir.z);
+		glm::mat4 T = glm::translate(glm::mat4(1), pos);
+		return R*T;
+	}
+};
+
+camera mycam;
+
 class Application : public EventCallbacks
 {
 
@@ -142,6 +84,39 @@ public:
 		{
 			glfwSetWindowShouldClose(window, GL_TRUE);
 		}
+		
+		if (key == GLFW_KEY_W && action == GLFW_PRESS)
+		{
+			mycam.w = 1;
+		}
+		if (key == GLFW_KEY_W && action == GLFW_RELEASE)
+		{
+			mycam.w = 0;
+		}
+		if (key == GLFW_KEY_S && action == GLFW_PRESS)
+		{
+			mycam.s = 1;
+		}
+		if (key == GLFW_KEY_S && action == GLFW_RELEASE)
+		{
+			mycam.s = 0;
+		}
+		if (key == GLFW_KEY_A && action == GLFW_PRESS)
+		{
+			mycam.a = 1;
+		}
+		if (key == GLFW_KEY_A && action == GLFW_RELEASE)
+		{
+			mycam.a = 0;
+		}
+		if (key == GLFW_KEY_D && action == GLFW_PRESS)
+		{
+			mycam.d = 1;
+		}
+		if (key == GLFW_KEY_D && action == GLFW_RELEASE)
+		{
+			mycam.d = 0;
+		}
 	}
 
 	// callback for the mouse when clicked move the triangle when helper functions
@@ -154,6 +129,7 @@ public:
 		{
 			glfwGetCursorPos(window, &posX, &posY);
 			std::cout << "Pos X " << posX <<  " Pos Y " << posY << std::endl;
+
 		}
 	}
 
@@ -173,8 +149,9 @@ public:
 		glGenVertexArrays(1, &VertexArrayID);
 		glBindVertexArray(VertexArrayID);
 
-
+		//generate vertex buffer to hand off to OGL
 		glGenBuffers(1, &VertexBufferID);
+		//set the current state to focus on our vertex buffer
 		glBindBuffer(GL_ARRAY_BUFFER, VertexBufferID);
 
 		GLfloat cube_vertices[] = {
@@ -188,10 +165,19 @@ public:
 			1.0, -1.0, -1.0,
 			1.0,  1.0, -1.0,
 			-1.0,  1.0, -1.0,
+			//tube 8 - 11
+			-1.0, -1.0,  1.0,
+			1.0, -1.0,  1.0,
+			1.0,  1.0,  1.0,
+			-1.0,  1.0,  1.0,
+			//12 - 15
+			-1.0, -1.0, -1.0,
+			1.0, -1.0, -1.0,
+			1.0,  1.0, -1.0,
+			-1.0,  1.0, -1.0
+
+			
 		};
-		//make it a bit smaller
-		for (int i = 0; i < 24; i++)
-			cube_vertices[i] *= 0.5;
 		//actually memcopy the data - only do this once
 		glBufferData(GL_ARRAY_BUFFER, sizeof(cube_vertices), cube_vertices, GL_DYNAMIC_DRAW);
 
@@ -203,15 +189,24 @@ public:
 		//color
 		GLfloat cube_colors[] = {
 			// front colors
-			1.0, 0.0, 0.0,
-			0.0, 1.0, 0.0,
-			0.0, 0.0, 1.0,
-			1.0, 1.0, 1.0,
+			1.0, 0.0, 0.5,
+			1.0, 0.0, 0.5,
+			1.0, 0.0, 0.5,
+			1.0, 0.0, 0.5,
 			// back colors
-			1.0, 0.0, 0.0,
-			0.0, 1.0, 0.0,
-			0.0, 0.0, 1.0,
-			1.0, 1.0, 1.0,
+			0.5, 0.5, 0.0,
+			0.5, 0.5, 0.0,
+			0.5, 0.5, 0.0,
+			0.5, 0.5, 0.0,
+			// tube colors
+			0.0, 1.0, 1.0,
+			0.0, 1.0, 1.0,
+			0.0, 1.0, 1.0,
+			0.0, 1.0, 1.0,
+			0.0, 1.0, 1.0,
+			0.0, 1.0, 1.0,
+			0.0, 1.0, 1.0,
+			0.0, 1.0, 1.0,
 		};
 		glGenBuffers(1, &VertexColorIDBox);
 		//set the current state to focus on our vertex buffer
@@ -224,26 +219,26 @@ public:
 		//set the current state to focus on our vertex buffer
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBufferIDBox);
 		GLushort cube_elements[] = {
+		
 			// front
 			0, 1, 2,
 			2, 3, 0,
-			// top
-			1, 5, 6,
-			6, 2, 1,
 			// back
 			7, 6, 5,
 			5, 4, 7,
-			// bottom
-			4, 0, 3,
-			3, 7, 4,
-			// left
-			4, 5, 1,
-			1, 0, 4,
-			// right
-			3, 2, 6,
-			6, 7, 3,
+			//tube 8-11, 12-15
+			8,12,13,
+			8,13,9,
+			9,13,14,
+			9,14,10,
+			10,14,15,
+			10,15,11,
+			11,15,12,
+			11,12,8
+			
 		};
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cube_elements), cube_elements, GL_STATIC_DRAW);
+
 
 
 		glBindVertexArray(0);
@@ -289,90 +284,48 @@ public:
 		glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
 		float aspect = width/(float)height;
 		glViewport(0, 0, width, height);
-
+		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		// Clear framebuffer.
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// Create the matrices
+		// Create the matrix stacks - please leave these alone for now
 		
-		glm::mat4 V, P; //View, Model and Perspective matrix
-		matrix Model;
-		Model.createIdentityMat();
+		glm::mat4 V, M, P; //View, Model and Perspective matrix
 		V = glm::mat4(1);
+		M = glm::mat4(1);
+		P = glm::perspective((float)(3.14159 / 4.), (float)((float)width/ (float)height), 0.1f, 1000.0f); //so much type casting... GLM metods are quite funny ones
+
+		//animation with the model matrix:
+		static float w = 0.0;
+		w += 0.01;//rotation angle
+		static float t = 0;
+		t += 0.01;
+		float trans = 0;// sin(t) * 2;
+		glm::mat4 T = glm::mat4(1.0f);
+		glm::mat4 RotateX = glm::rotate(glm::mat4(1.0f), w, glm::vec3(-1.0f, 1.0f, 0.0f));
+		glm::mat4 TransZ = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3 + trans));
+		glm::mat4 TransX = glm::translate(glm::mat4(1.0f), glm::vec3(0.4f, 0.0f, 0.0));
+		glm::mat4 S = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f, .1f, 0.1f));
+
 		
-		// Apply orthographic projection....
-		P = glm::ortho(-1 * aspect, 1 * aspect, -1.0f, 1.0f, -2.0f, 100.0f);		
-		if (width < height)
-			P = glm::ortho(-1.0f, 1.0f, -1.0f / aspect,  1.0f / aspect, -2.0f, 100.0f);
-		// ...but we overwrite it (optional) with a perspective projection.
-		P = glm::perspective((float)(3.14159 / 4.), (float)((float)width/ (float)height), 0.1f, 100.0f); //so much type casting... GLM metods are quite funny ones
 		// Draw the box using GLSL.
 		prog.bind();
 
-		//bind the cube's VAO:
-		glBindVertexArray(VertexArrayID);
-		
+		V = mycam.process();
 		//send the matrices to the shaders
 		glUniformMatrix4fv(prog.getUniform("P"), 1, GL_FALSE, &P[0][0]);
 		glUniformMatrix4fv(prog.getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &M[0][0]);
 
-
-		// H leg, 1 of 2
-		matrix R, S, tR, Tone, Ttwo;
-		Tone.createIdentityMat();
-		Ttwo.createIdentityMat();
-		R.createIdentityMat();
-		S.createIdentityMat();
-		tR.createIdentityMat();
-		tR.createRotationMatY(0.25f);
-		Tone.createTranslateMat(0, 0, -3);
-		Ttwo.createTranslateMat(-0.5, 0, 0);
-		S.createScaleMat(0.2, 1, 0.25);
+		glBindVertexArray(VertexArrayID);
+		//actually draw from vertex 0, 3 vertices
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBufferIDBox);
 		
-		Model = Tone * tR * Ttwo * S;
-
-		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &(Model.M[0][0]));	
+		TransX = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 0));
+		M = TransX  * S;
+		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &M[0][0]);
 		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
-
-		// H leg, 2 of 2 
-		Tone.createIdentityMat();
-		Ttwo.createIdentityMat();
-		S.createIdentityMat();
-		Tone.createTranslateMat(0, 0, -3);
-		Ttwo.createTranslateMat(0, 0, 0);
-		S.createScaleMat(0.2, 1, 0.25);
-		Model = Tone * tR * Ttwo * S;
-		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &(Model.M[0][0]));
-		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
-
-
-		// H bridge, 1 of 1 
-		Tone.createIdentityMat();
-		Ttwo.createIdentityMat();
-		R.createIdentityMat();
-		S.createIdentityMat();
-		Tone.createTranslateMat(0, 0, -3);
-		Ttwo.createTranslateMat(-0.25, 0, 0);	
-		S.createScaleMat(0.2, 0.85, 0.125);
-		R.createRotationMatZ(45.0f);
-		Model = Tone * tR * Ttwo * R * S;
-
-		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &(Model.M[0][0]));
-		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
-
-
-		// I, 1 of 1
-		Tone.createIdentityMat();
-		Ttwo.createIdentityMat();
-		S.createIdentityMat();
-		Tone.createTranslateMat(0, 0, -3);
-		Ttwo.createTranslateMat(0.5, 0, 0);
-		S.createScaleMat(0.2, 1, 0.25);
-		Model = Tone * tR * Ttwo * S;
-		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &(Model.M[0][0]));
-		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
-
-
+				
 		glBindVertexArray(0);
 
 		prog.unbind();
@@ -394,7 +347,7 @@ int main(int argc, char **argv)
 	/* your main will always include a similar set up to establish your window
 		and GL context, etc. */
 	WindowManager * windowManager = new WindowManager();
-	windowManager->init(640, 480);
+	windowManager->init(1920, 1080);
 	windowManager->setEventCallbacks(application);
 	application->windowManager = windowManager;
 
