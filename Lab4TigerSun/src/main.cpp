@@ -14,7 +14,113 @@ ZJ Wood CPE 471 Lab 3 base code
 // value_ptr for glm
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+class matrix
+{
+	public:
+		float M[4][4];
+		void createIdentityMat()
+		{	
+			for (int i = 0; i < 4; i++)
+			{
+				for (int j = 0; j < 4; j++)
+				{
+					M[i][j] = 0.0f;
+				}
+			}
+			int i2 = 0;
 
+			for (int j2 = 0; j2 < 4; j2++)
+			{
+				M[i2][j2] = 1.0f;
+				i2 += 1;
+			}
+		}
+		void operator=(const matrix& rhs)
+		{
+			for (int i = 0; i < 4; i++)
+			{
+				for (int j = 0; j < 4; j++)
+				{
+					M[i][j] = rhs.M[i][j];
+				}
+			}
+		}
+		void transposeMat()
+		{
+			float copy[4][4];
+			for (int i = 0; i < 4; i++)
+			{
+				for (int j = 0; j < 4; j++)
+				{
+					copy[i][j] = M[i][j];
+				}
+			}
+			for (int mi = 0; mi < 4; mi++)
+			{
+				for (int mj = 0; mj < 4; mj++)
+				{
+					M[mi][mj] = copy[mj][mi];
+				}
+			}
+		}
+		void createTranslateMat(float x, float y, float z)
+		{
+			M[3][0] = x;
+			M[3][1] = y;
+			M[3][2] = z;
+		}
+		void createScaleMat(float x, float y, float z)
+		{
+			M[0][0] = x;
+			M[1][1] = y;
+			M[2][2] = z;
+		}
+		void createRotationMatX(float angle)
+		{
+			M[1][1] = cos(angle);
+			M[1][2] = -1 * sin(angle);
+			M[2][1] = sin(angle);
+			M[2][2] = cos(angle);
+			transposeMat();
+			
+		}
+		void createRotationMatY(float angle)
+		{
+			M[0][0] = cos(angle);
+			M[0][2] = sin(angle);
+			M[2][0] = -1 * sin(angle);
+			M[2][2] = cos(angle);
+			transposeMat();
+
+		}
+		void createRotationMatZ(float angle)
+		{
+			M[0][0] = cos(angle);
+			M[0][1] = -1 * sin(angle);
+			M[1][0] = sin(angle);
+			M[1][1] = cos(angle);
+			transposeMat();
+
+
+		}
+};
+matrix operator*(const matrix lhs, const matrix rhs)
+{
+	matrix result;
+	result.createIdentityMat();
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			float first = rhs.M[i][0] * lhs.M[0][j];
+			float second = rhs.M[i][1] * lhs.M[1][j];
+			float third = rhs.M[i][2] * lhs.M[2][j];
+			float fourth = rhs.M[i][3] * lhs.M[3][j];
+			result.M[i][j] = first + second + third + fourth;
+		}
+	}
+	return result;
+}
 double get_last_elapsed_time()
 {
 	static double lasttime = glfwGetTime();
@@ -61,7 +167,9 @@ public:
 };
 
 camera mycam;
-
+float armRotation = 0;
+float armRotationDown = 0;
+float isShake = 0;
 class Application : public EventCallbacks
 {
 
@@ -117,6 +225,36 @@ public:
 		{
 			mycam.d = 0;
 		}
+
+		if (key == GLFW_KEY_M && action == GLFW_PRESS)
+		{
+			armRotation = 1;
+		}
+
+		if (key == GLFW_KEY_M && action == GLFW_RELEASE)
+		{
+			armRotation = 0;
+		}
+
+		if (key == GLFW_KEY_N && action == GLFW_PRESS)
+		{
+			armRotationDown = 1;
+		}
+
+		if (key == GLFW_KEY_N && action == GLFW_RELEASE)
+		{
+			armRotationDown = 0;
+		}
+		if (key == GLFW_KEY_X && action == GLFW_PRESS)
+		{
+			isShake = 1;
+		}
+
+		if (key == GLFW_KEY_C && action == GLFW_PRESS)
+		{
+			isShake = 0;
+		}
+		
 	}
 
 	// callback for the mouse when clicked move the triangle when helper functions
@@ -279,6 +417,8 @@ public:
 	********/
 	void render()
 	{
+		static float LeftArm = 0.0;
+		static float Shake = 0.0;
 		// Get current frame buffer size.
 		int width, height;
 		glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
@@ -290,22 +430,45 @@ public:
 
 		// Create the matrix stacks - please leave these alone for now
 		
-		glm::mat4 V, M, P; //View, Model and Perspective matrix
+		/*glm::mat4 V, M,  P;*/ //View, Model and Perspective matrix
+		glm::mat4 V, P;
 		V = glm::mat4(1);
-		M = glm::mat4(1);
+		matrix Model; 
+		Model.createIdentityMat();
+		/*M = glm::mat4(1);*/
 		P = glm::perspective((float)(3.14159 / 4.), (float)((float)width/ (float)height), 0.1f, 1000.0f); //so much type casting... GLM metods are quite funny ones
-
+		
 		//animation with the model matrix:
 		static float w = 0.0;
 		w += 0.01;//rotation angle
 		static float t = 0;
 		t += 0.01;
 		float trans = 0;// sin(t) * 2;
-		glm::mat4 T = glm::mat4(1.0f);
-		glm::mat4 RotateX = glm::rotate(glm::mat4(1.0f), w, glm::vec3(-1.0f, 1.0f, 0.0f));
-		glm::mat4 TransZ = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3 + trans));
-		glm::mat4 TransX = glm::translate(glm::mat4(1.0f), glm::vec3(0.4f, 0.0f, 0.0));
-		glm::mat4 S = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f, .1f, 0.1f));
+
+
+		// Torso 
+
+		matrix T;
+		T.createIdentityMat();
+		//glm::mat4 T = glm::mat4(1.0f);
+
+		matrix RotateX;
+		RotateX.createIdentityMat();
+		RotateX.createRotationMatX(w);
+		//glm::mat4 RotateX = glm::rotate(glm::mat4(1.0f), w, glm::vec3(-1.0f, 1.0f, 0.0f));
+
+		matrix TransZ;
+		TransZ.createIdentityMat();
+		TransZ.createTranslateMat(0.0f, 0.0f, -3 + trans);
+		//glm::mat4 TransZ = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3 + trans));
+
+		matrix TransX;
+		TransX.createIdentityMat();
+		TransX.createTranslateMat(0.4f, 0.0f, 0.0f);
+
+		matrix S;
+		S.createIdentityMat();
+		S.createScaleMat(0.15f, 0.15f, 0.1f);
 
 		
 		// Draw the box using GLSL.
@@ -315,19 +478,201 @@ public:
 		//send the matrices to the shaders
 		glUniformMatrix4fv(prog.getUniform("P"), 1, GL_FALSE, &P[0][0]);
 		glUniformMatrix4fv(prog.getUniform("V"), 1, GL_FALSE, &V[0][0]);
-		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &Model.M[0][0]);
 
 		glBindVertexArray(VertexArrayID);
 		//actually draw from vertex 0, 3 vertices
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBufferIDBox);
 		
-		TransX = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 0));
-		M = TransX  * S;
-		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		TransX.createTranslateMat(0, 0, 0);
+		Model = TransX  * S;
+		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &Model.M[0][0]);
 		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
 				
+
+		// Head
+		matrix head;
+		head.createIdentityMat();
+		matrix headT, headS, headR;
+		headT.createIdentityMat();
+		headS.createIdentityMat();
+		headR.createIdentityMat();
+
+		headT.createTranslateMat(0.0f, 0.225f, 0.0f);
+		headR.createRotationMatY(0.785398);
+		headS.createScaleMat(0.07f, 0.07f, 0.07f);
+		head = headT * headR *headS;
+		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &head.M[0][0]);
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+
+		
+
+		// Belt
+		matrix belt;
+		belt.createIdentityMat();
+		matrix beltT, beltS, beltR;
+		beltT.createIdentityMat();
+		beltS.createIdentityMat();
+		beltR.createIdentityMat();
+
+		beltT.createTranslateMat(0.0f, -0.165f, 0.0f);
+		beltR.createRotationMatZ(1.5708);
+		beltS.createScaleMat(0.01f, 0.15f, 0.1f);
+
+		belt = beltT * beltR * beltS;
+		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &belt.M[0][0]);
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+
+
+		// Belt Buckle
+		matrix buckle;
+		buckle.createIdentityMat();
+		matrix buckleT, buckleS, buckleR;
+		buckleT.createIdentityMat();
+		buckleS.createIdentityMat();
+		buckleR.createIdentityMat();
+
+		buckleT.createTranslateMat(0.0f, -0.165f, 0.11f);
+		buckleR.createRotationMatY(1.5708);
+		buckleS.createScaleMat(0.005f, 0.005f, 0.02f);
+
+		buckle = buckleT * buckleR * buckleS;
+		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &buckle.M[0][0]);
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+
+
+		// Leg 1 
+		matrix leg1; 
+		leg1.createIdentityMat();
+		matrix leg1T, leg1S, leg1R;
+		leg1T.createIdentityMat();
+		leg1S.createIdentityMat();
+		leg1R.createIdentityMat();
+
+		leg1T.createTranslateMat(-0.1f, -0.325f, 0.0f);
+		leg1S.createScaleMat(0.03f, 0.15f, 0.05f);
+		leg1R.createRotationMatY(0.785398);
+
+		leg1 = leg1T * leg1R * leg1S;
+		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &leg1.M[0][0]);
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+		// Leg 2
+		matrix leg2;
+		leg2.createIdentityMat();
+		matrix leg2T, leg2S, leg2R;
+		leg2T.createIdentityMat();
+		leg2S.createIdentityMat();
+		leg2R.createIdentityMat();
+
+		leg2T.createTranslateMat(0.1f, -0.325f, 0.0f);
+		leg2S.createScaleMat(0.03f, 0.15f, 0.05f);
+		leg2R.createRotationMatY(0.785398);
+
+		leg2 = leg2T * leg2R * leg2S;
+		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &leg2.M[0][0]);
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+
+		if (armRotation == 1 && LeftArm <= 1.65f)
+		{
+			LeftArm += 0.01;
+		}
+
+		if (armRotationDown == 1 && LeftArm >= -0.7f)
+		{
+			LeftArm -= 0.01;
+		}
+
+		// Lower Arm Left
+		matrix armL;
+		armL.createIdentityMat();
+		matrix armLT, armLTO, armLS, armLR;
+		armLT.createIdentityMat();
+		armLTO.createIdentityMat();
+		armLS.createIdentityMat();
+		armLR.createIdentityMat();
+
+		armLT.createTranslateMat(-0.16f, 0.1f, 0.0f);
+		armLTO.createTranslateMat(0.0f, -0.07f, 0.0f);
+		armLR.createRotationMatZ(-0.785398 - LeftArm);
+		armLS.createScaleMat(0.01, 0.08, 0.01);
+
+
+		armL = armLT * armLR * armLTO * armLS;
+		matrix savethis;
+		savethis.createIdentityMat();
+		savethis = armLT * armLR * armLTO;
+		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &armL.M[0][0]);
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+		std::cout << Shake << std::endl;
+		if (isShake == 1)
+		{
+			Shake += 0.01;
+			if (Shake >= 0.5f)
+			{
+				isShake = -1;
+			}
+		}
+		if (isShake == -1)
+		{
+
+			Shake -= 0.01;
+			if (Shake <= 0.0f)
+			{
+				isShake = 1;
+			}
+		}
+		
+		if (isShake == 0)
+		{
+			Shake = 0;
+		}
+		// Upper Arm Left
+
+		matrix armL2;
+		armL2.createIdentityMat();
+		matrix armL2T, armL2TO, armL2S, armL2R;
+		armL2T.createIdentityMat();
+		armL2TO.createIdentityMat();
+		armL2S.createIdentityMat();
+		armL2R.createIdentityMat();
+
+		armL2T.createTranslateMat(-0.01f, -0.08f, 0.0f);
+		armL2TO.createTranslateMat(0.0f, 0.07f, 0.0f);
+		armL2R.createRotationMatZ(1.309 + Shake);
+		armL2S.createScaleMat(0.01, 0.08, 0.01);
+
+		armL2 = savethis * armL2T * armL2R * armL2TO * armL2S;
+		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &armL2.M[0][0]);
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+		// Lower Arm Right
+		matrix armR;
+		armR.createIdentityMat();
+		matrix armRT, armRTO, armRS, armRR;
+		armRT.createIdentityMat();
+		armRTO.createIdentityMat();
+		armRS.createIdentityMat();
+		armRR.createIdentityMat();
+
+		armRT.createTranslateMat(0.16f, 0.1f, 0.0f);
+		armRTO.createTranslateMat(0.0f, -0.07f, 0.0f);
+		//armRR.createRotationMatZ(0.785398 + LeftArm);
+		armRR.createRotationMatZ(0.785398);
+		armRS.createScaleMat(0.01, 0.08, 0.01);
+
+
+		armR = armRT * armRR * armRTO * armRS;
+		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &armR.M[0][0]);
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
 		glBindVertexArray(0);
 
+		// Upper Arm Right
 		prog.unbind();
 
 	}
