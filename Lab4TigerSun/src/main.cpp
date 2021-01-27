@@ -577,7 +577,7 @@ public:
 		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
 
 
-		if (armRotation == 1 && LeftArm <= 1.65f)
+		if (armRotation == 1 && LeftArm <= 1.55f)
 		{
 			LeftArm += 0.01;
 		}
@@ -603,13 +603,12 @@ public:
 
 
 		armL = armLT * armLR * armLTO * armLS;
-		matrix savethis;
-		savethis.createIdentityMat();
-		savethis = armLT * armLR * armLTO;
+		matrix left_arm;
+		left_arm.createIdentityMat();
+		left_arm = armLT * armLR * armLTO;
 		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &armL.M[0][0]);
 		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
 
-		std::cout << Shake << std::endl;
 		if (isShake == 1)
 		{
 			Shake += 0.01;
@@ -647,7 +646,9 @@ public:
 		armL2R.createRotationMatZ(1.309 + Shake);
 		armL2S.createScaleMat(0.01, 0.08, 0.01);
 
-		armL2 = savethis * armL2T * armL2R * armL2TO * armL2S;
+		armL2 = left_arm * armL2T * armL2R * armL2TO * armL2S;
+		matrix left_upper;
+		left_upper = left_arm * armL2T * armL2R * armL2TO;
 		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &armL2.M[0][0]);
 		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
 
@@ -662,17 +663,232 @@ public:
 
 		armRT.createTranslateMat(0.16f, 0.1f, 0.0f);
 		armRTO.createTranslateMat(0.0f, -0.07f, 0.0f);
-		//armRR.createRotationMatZ(0.785398 + LeftArm);
-		armRR.createRotationMatZ(0.785398);
+		armRR.createRotationMatZ(0.785398 + LeftArm);
+		/*armRR.createRotationMatZ(0.785398);*/
 		armRS.createScaleMat(0.01, 0.08, 0.01);
 
 
 		armR = armRT * armRR * armRTO * armRS;
+		matrix right_arm;
+		right_arm = armRT * armRR * armRTO;
 		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &armR.M[0][0]);
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+		
+
+		// Upper Arm Right
+		matrix armR2;
+		armR2.createIdentityMat();
+		matrix armR2T, armR2TO, armR2S, armR2R;
+		armR2T.createIdentityMat();
+		armR2TO.createIdentityMat();
+		armR2S.createIdentityMat();
+		armR2R.createIdentityMat();
+
+		armR2T.createTranslateMat(0.01f, -0.08f, 0.0f);
+		armR2TO.createTranslateMat(0.0f, 0.07f, 0.0f);
+		armR2R.createRotationMatZ(-1.309 - Shake);
+		armR2S.createScaleMat(0.01, 0.08, 0.01);
+
+		armR2 = right_arm * armR2T * armR2R * armR2TO * armR2S;
+		matrix right_upper = right_arm * armR2T * armR2R * armR2TO;
+		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &armR2.M[0][0]);
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+		
+		
+		// Left Hand
+
+		matrix H1;
+		H1.createIdentityMat();
+		matrix H1T, H1S, H1R;
+		H1T.createIdentityMat();
+		H1S.createIdentityMat();
+		
+		H1T.createTranslateMat(-0.001f, 0.095f, 0.0f);
+		H1S.createScaleMat(0.01, 0.012, 0.01);
+		
+		H1 = left_upper * H1T * H1S;
+		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &H1.M[0][0]);
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+
+		// Thumb 1 
+
+		matrix Thumb1;
+		Thumb1.createIdentityMat();
+		matrix Thumb1T, Thumb1S;
+		Thumb1T.createIdentityMat();
+		Thumb1S.createIdentityMat();
+
+		Thumb1T.createTranslateMat(0.015f, 0.09f, 0.0f);
+		Thumb1S.createScaleMat(0.01, 0.003, 0.01);
+		
+		Thumb1 = left_upper * Thumb1T * Thumb1S;
+		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &Thumb1.M[0][0]);
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+		// Left Index Finger
+
+		matrix IndexL;
+		IndexL.createIdentityMat();
+		matrix IndexLT, IndexLS;
+		IndexLT.createIdentityMat();
+		IndexLS.createIdentityMat();
+
+		IndexLT.createTranslateMat(0.007f, 0.117f, 0.0f);
+		IndexLS.createScaleMat(0.002, 0.012, 0.01);
+		
+		IndexL = left_upper * IndexLT * IndexLS;
+		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &IndexL.M[0][0]);
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+		
+		
+		// Left Middle Finger
+
+		matrix MiddleL;
+		MiddleL.createIdentityMat();
+		matrix MiddleLT, MiddleLS;
+		MiddleLT.createIdentityMat();
+		MiddleLS.createIdentityMat();
+
+		MiddleLT.createTranslateMat(0.002f, 0.117f, 0.0f);
+		MiddleLS.createScaleMat(0.002, 0.012, 0.01);
+
+		MiddleL = left_upper * MiddleLT * MiddleLS;
+		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &MiddleL.M[0][0]);
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+		
+
+		// Left Ring Finger
+		
+		matrix RingL;
+		RingL.createIdentityMat();
+		matrix RingLT, RingLS;
+		RingLT.createIdentityMat();
+		RingLS.createIdentityMat();
+
+		RingLT.createTranslateMat(-0.003f, 0.117f, 0.0f);
+		RingLS.createScaleMat(0.002, 0.012, 0.01);
+		RingL = left_upper * RingLT * RingLS;
+		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &RingL.M[0][0]);
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+
+		// Left Pinkey Finger
+		
+		matrix PL;
+		PL.createIdentityMat();
+		matrix PLT, PLS;
+		PLT.createIdentityMat();
+		PLS.createIdentityMat();
+
+		PLT.createTranslateMat(-0.008f, 0.117f, 0.0f);
+		PLS.createScaleMat(0.002, 0.012, 0.01);
+		PL = left_upper * PLT * PLS;
+		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &PL.M[0][0]);
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+		// Right Hand
+
+		matrix H2;
+		H2.createIdentityMat();
+		matrix H2T, H2S, H2R;
+		H2T.createIdentityMat();
+		H2S.createIdentityMat();
+
+		H2T.createTranslateMat(0.001f, 0.095f, 0.0f);
+		H2S.createScaleMat(0.01, 0.012, 0.01);
+
+		H2 = right_upper* H2T * H2S;
+		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &H2.M[0][0]);
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+
+
+		// Thumb 2
+
+		matrix Thumb2;
+		Thumb2.createIdentityMat();
+		matrix Thumb2T, Thumb2S;
+		Thumb2T.createIdentityMat();
+		Thumb2S.createIdentityMat();
+
+		Thumb2T.createTranslateMat(-0.015f, 0.09f, 0.0f);
+		Thumb2S.createScaleMat(0.01, 0.003, 0.01);
+
+		Thumb2 = right_upper * Thumb2T * Thumb2S;
+		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &Thumb2.M[0][0]);
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+
+
+
+		// Right Index Finger
+
+		matrix IndexR;
+		IndexR.createIdentityMat();
+		matrix IndexRT, IndexRS;
+		IndexRT.createIdentityMat();
+		IndexRS.createIdentityMat();
+
+		IndexRT.createTranslateMat(-0.007f, 0.117f, 0.0f);
+		IndexRS.createScaleMat(0.002, 0.012, 0.01);
+
+		IndexR = right_upper * IndexRT * IndexRS;
+		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &IndexR.M[0][0]);
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+
+		// Right Middle Finger
+
+		matrix MiddleR;
+		MiddleR.createIdentityMat();
+		matrix MiddleRT, MiddleRS;
+		MiddleRT.createIdentityMat();
+		MiddleRS.createIdentityMat();
+
+		MiddleRT.createTranslateMat(-0.002f, 0.117f, 0.0f);
+		MiddleRS.createScaleMat(0.002, 0.012, 0.01);
+
+		MiddleR = right_upper * MiddleRT * MiddleRS;
+		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &MiddleR.M[0][0]);
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+
+
+		// Right Ring Finger
+
+		matrix RingR;
+		RingR.createIdentityMat();
+		matrix RingRT, RingRS;
+		RingRT.createIdentityMat();
+		RingRS.createIdentityMat();
+
+		RingRT.createTranslateMat(0.003f, 0.117f, 0.0f);
+		RingRS.createScaleMat(0.002, 0.012, 0.01);
+		RingR = right_upper * RingRT * RingRS;
+		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &RingR.M[0][0]);
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+
+
+		// Right Pinkey Finger
+
+		matrix PR;
+		PR.createIdentityMat();
+		matrix PRT, PRS;
+		PRT.createIdentityMat();
+		PRS.createIdentityMat();
+
+		PRT.createTranslateMat(0.008f, 0.117f, 0.0f);
+		PRS.createScaleMat(0.002, 0.012, 0.01);
+		PR = right_upper * PRT * PRS;
+		glUniformMatrix4fv(prog.getUniform("M"), 1, GL_FALSE, &PR.M[0][0]);
 		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
 		glBindVertexArray(0);
 
-		// Upper Arm Right
+
+
 		prog.unbind();
 
 	}
