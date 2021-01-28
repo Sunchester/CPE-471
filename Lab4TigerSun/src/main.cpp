@@ -423,6 +423,10 @@ public:
 		int width, height;
 		glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
 		float aspect = width/(float)height;
+		if (width == 0 && height == 0)
+		{
+			return;
+		}
 		glViewport(0, 0, width, height);
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		// Clear framebuffer.
