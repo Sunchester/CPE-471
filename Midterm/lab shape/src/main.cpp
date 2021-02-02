@@ -131,18 +131,8 @@ public:
 		if (action == GLFW_PRESS)
 		{
 			glfwGetCursorPos(window, &posX, &posY);
-			std::cout << "Pos X " << posX <<  " Pos Y " << posY << std::endl;
+			std::cout << "Pos X " << posX << " Pos Y " << posY << std::endl;
 
-			//change this to be the points converted to WORLD
-			//THIS IS BROKEN< YOU GET TO FIX IT - yay!
-			newPt[0] = 0;
-			newPt[1] = 0;
-
-			std::cout << "converted:" << newPt[0] << " " << newPt[1] << std::endl;
-			glBindBuffer(GL_ARRAY_BUFFER, VertexBufferID);
-			//update the vertex array with the updated points
-			glBufferSubData(GL_ARRAY_BUFFER, sizeof(float)*6, sizeof(float)*2, newPt);
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
 		}
 	}
 
@@ -165,7 +155,108 @@ public:
 		shape.resize();
 		shape.init();
 
+		//generate the VAO
+		glGenVertexArrays(1, &VertexArrayID);
+		glBindVertexArray(VertexArrayID);
+
+		//generate vertex buffer to hand off to OGL
+		glGenBuffers(1, &VertexBufferID);
+		//set the current state to focus on our vertex buffer
+		glBindBuffer(GL_ARRAY_BUFFER, VertexBufferID);
+
+		GLfloat cube_vertices[] = {
+			// front
+			-1.0, -1.0,  1.0,
+			1.0, -1.0,  1.0,
+			1.0,  1.0,  1.0,
+			-1.0,  1.0,  1.0,
+			// back
+			-1.0, -1.0, -1.0,
+			1.0, -1.0, -1.0,
+			1.0,  1.0, -1.0,
+			-1.0,  1.0, -1.0,
+			//tube 8 - 11
+			-1.0, -1.0,  1.0,
+			1.0, -1.0,  1.0,
+			1.0,  1.0,  1.0,
+			-1.0,  1.0,  1.0,
+			//12 - 15
+			-1.0, -1.0, -1.0,
+			1.0, -1.0, -1.0,
+			1.0,  1.0, -1.0,
+			-1.0,  1.0, -1.0
+
+
+		};
+		//actually memcopy the data - only do this once
+		glBufferData(GL_ARRAY_BUFFER, sizeof(cube_vertices), cube_vertices, GL_DYNAMIC_DRAW);
+
+		//we need to set up the vertex array
+		glEnableVertexAttribArray(0);
+		//key function to get up how many elements to pull out at a time (3)
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+		//color
+		GLfloat cube_colors[] = {
+			// front colors
+			1.0, 1.0, 1.0,
+			1.0, 1.0, 1.0,
+			1.0, 1.0, 1.0,
+			1.0, 1.0, 1.0,
+			// back colors
+			1.0, 1.0, 1.0,
+			1.0, 1.0, 1.0,
+			1.0, 1.0, 1.0,
+			1.0, 1.0, 1.0,
+			// tube colors
+			0.0, 1.0, 1.0,
+			0.0, 1.0, 1.0,
+			0.0, 1.0, 1.0,
+			0.0, 1.0, 1.0,
+			0.0, 1.0, 1.0,
+			0.0, 1.0, 1.0,
+			0.0, 1.0, 1.0,
+			0.0, 1.0, 1.0,
+		};
+		glGenBuffers(1, &VertexColorIDBox);
+		//set the current state to focus on our vertex buffer
+		glBindBuffer(GL_ARRAY_BUFFER, VertexColorIDBox);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(cube_colors), cube_colors, GL_STATIC_DRAW);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+		glGenBuffers(1, &IndexBufferIDBox);
+		//set the current state to focus on our vertex buffer
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBufferIDBox);
+		GLushort cube_elements[] = {
+
+			// front
+			0, 1, 2,
+			2, 3, 0,
+			// back
+			7, 6, 5,
+			5, 4, 7,
+			//tube 8-11, 12-15
+			8,12,13,
+			8,13,9,
+			9,13,14,
+			9,14,10,
+			10,14,15,
+			10,15,11,
+			11,15,12,
+			11,12,8
+
+		};
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cube_elements), cube_elements, GL_STATIC_DRAW);
+
+
+
+		glBindVertexArray(0);
+
 	}
+
+	
+
 
 	//General OGL initialization - set OGL state here
 	void init(const std::string& resourceDirectory)
@@ -218,28 +309,55 @@ public:
 
 		//animation with the model matrix:
 		static float w = 0.0;
-		w += 1.0 * frametime;//rotation angle
+		w += 1.0 * frametime * 3;//rotation angle
 		float trans = 0;// sin(t) * 2;
 		glm::mat4 RotateY = glm::rotate(glm::mat4(1.0f), w, glm::vec3(0.0f, 1.0f, 0.0f));
 		float angle = -3.1415926/2.0;
 
-		glm::mat4 RotateX = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(1.0f, 0.0f, 0.0f));
+		/*glm::mat4 RotateX = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(1.0f, 0.0f, 0.0f));
 		glm::mat4 TransZ = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3 + trans));
-		glm::mat4 S = glm::scale(glm::mat4(1.0f), glm::vec3(0.8f, 0.8f, 0.8f));
+		glm::mat4 S = glm::scale(glm::mat4(1.0f), glm::vec3(0.8f, 0.8f, 0.8f));*/
 
-		M =  TransZ * RotateY * RotateX * S;
+		/*M =  TransZ * RotateY * RotateX * S;*/
 
 		// Draw the box using GLSL.
 		prog->bind();
 
 		V = mycam.process(frametime);
+		glBindVertexArray(VertexArrayID);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBufferIDBox);
+
+		mat4 rotAll = glm::rotate(mat4(1.0f), 0.261799f, vec3(0.0, 1.0, 0.0));
+		// Middle Body of Snowman
+		mat4 transl = glm::translate(mat4(1.0f), vec3(0.0f, 0.0, -3.5f));
+		mat4 scale = glm::scale(mat4(1.0f), vec3(0.20f, 0.20f, 0.20f));
+		M = transl * rotAll * scale;
 		//send the matrices to the shaders
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
 		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
 		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
-		
-		shape.draw(prog);		
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+		/*shape.draw(prog);	*/	
 
+		// Head of Snowman
+		mat4 translate1 = glm::translate(mat4(1.0f), vec3(0.0f, 0.355f, -3.5f));
+		mat4 scale1 = glm::scale(mat4(1.0f), vec3(0.15f, 0.15f, 0.15f));
+		M =  translate1* rotAll  * scale1;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+
+		// Bottom Body of Snowman
+		mat4 translate2 = glm::translate(mat4(1.0f), vec3(0.0f, -0.45f, -3.5f));
+		mat4 scale2 = glm::scale(mat4(1.0f), vec3(0.25f, 0.25f, 0.25f));
+		M = translate2 * rotAll * scale2;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+		glBindVertexArray(0);
 		prog->unbind();
 	}
 
