@@ -64,7 +64,10 @@ public:
 };
 
 camera mycam;
-
+float armRotation = 0;
+float armRotationDown = 0;
+float armRotationRight = 0;
+float armRotationRightDown = 0;
 class Application : public EventCallbacks
 {
 
@@ -120,6 +123,45 @@ public:
 		{
 			mycam.d = 0;
 		}
+		if (key == GLFW_KEY_M && action == GLFW_PRESS)
+		{
+			armRotation = 1;
+		}
+
+		if (key == GLFW_KEY_M && action == GLFW_RELEASE)
+		{
+			armRotation = 0;
+		}
+
+		if (key == GLFW_KEY_N && action == GLFW_PRESS)
+		{
+			armRotationDown = 1;
+		}
+
+		if (key == GLFW_KEY_N && action == GLFW_RELEASE)
+		{
+			armRotationDown = 0;
+		}
+		if (key == GLFW_KEY_K && action == GLFW_PRESS)
+		{
+			armRotationRight = 1;
+		}
+
+		if (key == GLFW_KEY_K && action == GLFW_RELEASE)
+		{
+			armRotationRight = 0;
+		}
+
+		if (key == GLFW_KEY_J && action == GLFW_PRESS)
+		{
+			armRotationRightDown = 1;
+		}
+
+		if (key == GLFW_KEY_J && action == GLFW_RELEASE)
+		{
+			armRotationRightDown = 0;
+		}
+
 	}
 
 	// callback for the mouse when clicked move the triangle when helper functions
@@ -330,6 +372,8 @@ public:
 	********/
 	void render()
 	{
+		static float LeftArm = 0.0;
+		static float RightArm = 0.0;
 		double frametime = get_last_elapsed_time();
 
 		// Get current frame buffer size.
@@ -605,7 +649,60 @@ public:
 		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
 		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
 		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+		if (armRotation == 1 && LeftArm <= 1.55f)
+		{
+			LeftArm += 0.01;
+		}
+
+		if (armRotationDown == 1 && LeftArm >= -0.7f)
+		{
+			LeftArm -= 0.01;
+		}
+
+
+		if (armRotationRight == 1 && RightArm <= 1.55f)
+		{
+			RightArm += 0.01;
+		}
+
+		if (armRotationRightDown == 1 && RightArm >= -0.7f)
+		{
+			RightArm -= 0.01;
+		}
+		// Left Lower Arm 
+		b.x = 0.5450980392156863;
+		b.y = 0.2705882352941176;
+		b.z = 0.0745098039215686;
+		
+		mat4 armLoT = glm::translate(mat4(1.0f), vec3(-0.205f, 0.1f, -3.0f));
+		mat4 armLoTO = glm::translate(mat4(1.0f), vec3(0.0f, -0.15f, 0.0f));
+		mat4 armLoR = glm::rotate(mat4(1.0f), -0.785398f - LeftArm, vec3(0.0, 0.0, 1.0));
+		mat4 armLoS = glm::scale(mat4(1.0f),vec3(0.02, 0.15, 0.02));
+		M = armLoT * rotAll * armLoR * armLoTO * armLoS;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+		// Right Lower Arm
+		b.x = 0.5450980392156863;
+		b.y = 0.2705882352941176;
+		b.z = 0.0745098039215686;
+
+		mat4 armRoT = glm::translate(mat4(1.0f), vec3(0.205f, 0.1f, -3.0f));
+		mat4 armRoTO = glm::translate(mat4(1.0f), vec3(0.0f, -0.15f, 0.0f));
+		mat4 armRoR = glm::rotate(mat4(1.0f), 0.785398f + RightArm, vec3(0.0, 0.0, 1.0));
+		mat4 armRoS = glm::scale(mat4(1.0f), vec3(0.02, 0.15, 0.02));
+		M =  armRoT * rotAll * armRoR * armRoTO * armRoS;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
 		glBindVertexArray(0);
+
 		// Hat
 		glBindVertexArray(triVAO);
 		b.x = 0;
