@@ -372,6 +372,8 @@ public:
 	********/
 	void render()
 	{
+		static float upperL = 0.0;
+		static float upperR = 0.0;
 		static float LeftArm = 0.0;
 		static float RightArm = 0.0;
 		double frametime = get_last_elapsed_time();
@@ -653,23 +655,34 @@ public:
 		if (armRotation == 1 && LeftArm <= 1.55f)
 		{
 			LeftArm += 0.01;
+			if(upperL <= 1.85)
+				upperL += 0.011;
+			std::cout << upperL << endl;
 		}
 
 		if (armRotationDown == 1 && LeftArm >= -0.7f)
 		{
 			LeftArm -= 0.01;
+			if (upperL >= -1.85)
+				upperL -= 0.011;
 		}
 
 
 		if (armRotationRight == 1 && RightArm <= 1.55f)
 		{
 			RightArm += 0.01;
+			if (upperR <= 1.85)
+				upperR += 0.011;
 		}
 
 		if (armRotationRightDown == 1 && RightArm >= -0.7f)
 		{
 			RightArm -= 0.01;
+			if (upperR >= -1.85)
+				upperR -= 0.011;
 		}
+		
+
 		// Left Lower Arm 
 		b.x = 0.5450980392156863;
 		b.y = 0.2705882352941176;
@@ -680,6 +693,23 @@ public:
 		mat4 armLoR = glm::rotate(mat4(1.0f), -0.785398f - LeftArm, vec3(0.0, 0.0, 1.0));
 		mat4 armLoS = glm::scale(mat4(1.0f),vec3(0.02, 0.15, 0.02));
 		M = armLoT * rotAll * armLoR * armLoTO * armLoS;
+		mat4 LoM = armLoT* armLoR * armLoTO;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+		// Left Upper Arm
+		b.x = 0.5450980392156863;
+		b.y = 0.2705882352941176;
+		b.z = 0.0745098039215686;
+
+		mat4 armLuT = glm::translate(mat4(1.0f), vec3(-0.001f, -0.15f, 0.105f));
+		mat4 armLuTO = glm::translate(mat4(1.0f), vec3(0.0f, 0.15f, 0.0f));
+		mat4 armLuR = glm::rotate(mat4(1.0f), 1.309f + upperL, vec3(0.0, 0.0, 1.0));
+		mat4 armLuS = glm::scale(mat4(1.0f), vec3(0.02, 0.15, 0.02));
+		M = LoM * armLuT * rotAll* armLuR * armLuTO * armLuS;
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
 		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
 		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
@@ -696,11 +726,31 @@ public:
 		mat4 armRoR = glm::rotate(mat4(1.0f), 0.785398f + RightArm, vec3(0.0, 0.0, 1.0));
 		mat4 armRoS = glm::scale(mat4(1.0f), vec3(0.02, 0.15, 0.02));
 		M =  armRoT * rotAll * armRoR * armRoTO * armRoS;
+		mat4 RoM = armRoT * armRoR * armRoTO;
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
 		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
 		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
 		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
 		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+
+		// Right Upper Arm
+		b.x = 0.5450980392156863;
+		b.y = 0.2705882352941176;
+		b.z = 0.0745098039215686;
+
+		mat4 armRuT = glm::translate(mat4(1.0f), vec3(0.001f, -0.15f, -0.075f));
+		mat4 armRuTO = glm::translate(mat4(1.0f), vec3(0.0f, 0.15f, 0.0f));
+		mat4 armRuR = glm::rotate(mat4(1.0f), -1.309f - upperR, vec3(0.0, 0.0, 1.0));
+		mat4 armRuS = glm::scale(mat4(1.0f), vec3(0.02, 0.15, 0.02));
+		M = RoM * armRuT * rotAll * armRuR * armRuTO * armRuS;
+
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
 		glBindVertexArray(0);
 
 		// Hat
