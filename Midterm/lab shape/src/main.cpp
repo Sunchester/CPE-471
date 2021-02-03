@@ -76,10 +76,10 @@ public:
 	std::shared_ptr<Program> prog;
 
 	// Contains vertex information for OpenGL
-	GLuint VertexArrayID;
+	GLuint VertexArrayID, triVAO;
 
 	// Data necessary to give our box to OpenGL
-	GLuint VertexBufferID, VertexColorIDBox, IndexBufferIDBox;
+	GLuint VertexBufferID, VertexColorIDBox, IndexBufferIDBox, triVBO, triColor;
 
 	void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
 	{
@@ -217,6 +217,7 @@ public:
 			0.0, 1.0, 1.0,
 			0.0, 1.0, 1.0,
 			0.0, 1.0, 1.0,
+			
 		};
 		glGenBuffers(1, &VertexColorIDBox);
 		//set the current state to focus on our vertex buffer
@@ -224,7 +225,6 @@ public:
 		glBufferData(GL_ARRAY_BUFFER, sizeof(cube_colors), cube_colors, GL_STATIC_DRAW);
 		glEnableVertexAttribArray(1);
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
 		glGenBuffers(1, &IndexBufferIDBox);
 		//set the current state to focus on our vertex buffer
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBufferIDBox);
@@ -253,6 +253,47 @@ public:
 
 		glBindVertexArray(0);
 
+		//generate the VAO
+		glGenVertexArrays(1, &triVAO);
+		glBindVertexArray(triVAO);
+
+		//generate vertex buffer to hand off to OGL
+		glGenBuffers(1, &triVBO);
+		//set the current state to focus on our vertex buffer
+		glBindBuffer(GL_ARRAY_BUFFER, triVBO);
+
+		static const GLfloat tri_v[] =
+		{
+			-0.5f, -0.5f, 0.0f,
+			0.5f, -0.5f, 0.0f,
+			0.0f, 0.7f, 0.0f,
+			-0.5f, -0.5f, 0.0f,
+			0.5f, -0.5f, 0.0f,
+			0.0f, 0.7f, 0.0f,
+		};
+		glBufferData(GL_ARRAY_BUFFER, sizeof(tri_v), tri_v, GL_DYNAMIC_DRAW);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+		glGenBuffers(1, &triColor);
+		//set the current state to focus on our vertex buffer
+		glBindBuffer(GL_ARRAY_BUFFER, triColor);
+		static const GLfloat colors[] =
+		{
+			1.0f, 0.0f, 0.0f,
+			1.0f, 0.0f, 0.0f,
+			1.0f, 1.0f, 1.0f,
+			1.0f, 0.5490196078431373f, 0.0f,
+			1.0f, 0.5490196078431373f, 0.0f,
+			1.0f, 1.0f, 1.0f,
+		}; 
+
+		glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_DYNAMIC_DRAW);
+
+		//we need to set up the vertex array
+		glEnableVertexAttribArray(1);
+		//key function to get up how many elements to pull out at a time (3)
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 	}
 
 	
@@ -277,6 +318,7 @@ public:
 		prog->addUniform("V");
 		prog->addUniform("M");
 		prog->addAttribute("vertPos");
+		prog->addUniform("black");
 		
 	}
 
@@ -309,7 +351,7 @@ public:
 
 		//animation with the model matrix:
 		static float w = 0.0;
-		w += 1.0 * frametime * 3;//rotation angle
+		w += 1.0 * frametime;//rotation angle
 		float trans = 0;// sin(t) * 2;
 		glm::mat4 RotateY = glm::rotate(glm::mat4(1.0f), w, glm::vec3(0.0f, 1.0f, 0.0f));
 		float angle = -3.1415926/2.0;
@@ -323,42 +365,277 @@ public:
 		// Draw the box using GLSL.
 		prog->bind();
 
+		vec3 b(0, 0, 0);
 		V = mycam.process(frametime);
 		glBindVertexArray(VertexArrayID);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBufferIDBox);
 
-		mat4 rotAll = glm::rotate(mat4(1.0f), 0.261799f, vec3(0.0, 1.0, 0.0));
+		mat4 rotAll = glm::rotate(mat4(1.0f), 0.349066f, vec3(0.0, 1.0, 0.0));
 		// Middle Body of Snowman
-		mat4 transl = glm::translate(mat4(1.0f), vec3(0.0f, 0.0, -3.5f));
+		mat4 transl = glm::translate(mat4(1.0f), vec3(0.0f, 0.0, -3.0f));
 		mat4 scale = glm::scale(mat4(1.0f), vec3(0.20f, 0.20f, 0.20f));
 		M = transl * rotAll * scale;
+		
 		//send the matrices to the shaders
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
 		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
 		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
 		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
 		/*shape.draw(prog);	*/	
 
 		// Head of Snowman
-		mat4 translate1 = glm::translate(mat4(1.0f), vec3(0.0f, 0.355f, -3.5f));
+		mat4 translate1 = glm::translate(mat4(1.0f), vec3(0.0f, 0.355f, -3.0f));
 		mat4 scale1 = glm::scale(mat4(1.0f), vec3(0.15f, 0.15f, 0.15f));
 		M =  translate1* rotAll  * scale1;
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
 		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
 		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
 		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
 
 
 		// Bottom Body of Snowman
-		mat4 translate2 = glm::translate(mat4(1.0f), vec3(0.0f, -0.45f, -3.5f));
+		mat4 translate2 = glm::translate(mat4(1.0f), vec3(0.0f, -0.45f, -3.0f));
 		mat4 scale2 = glm::scale(mat4(1.0f), vec3(0.25f, 0.25f, 0.25f));
 		M = translate2 * rotAll * scale2;
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
 		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
 		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+		// Button 1
+		b.x = -1;
+		b.y = -1;
+		b.z= -1;
+		mat4 translateBut = glm::translate(mat4(1.0f), vec3(0.0, 0.0, 0.25));
+		mat4 translate3 = glm::translate(mat4(1.0f), vec3(0.0f, -0.60f, -3.0f));
+		mat4 scale3 = glm::scale(mat4(1.0f), vec3(0.025f, 0.025f, 0.025f));
+		M = translate3 * rotAll * translateBut * scale3;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+		// Button 2
+		b.x = -1;
+		b.y = -1;
+		b.z = -1;
+		mat4 translate4 = glm::translate(mat4(1.0f), vec3(0.0f, -0.45f, -3.0f));
+		M = translate4 * rotAll * translateBut * scale3;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+		// Button 3
+		b.x = -1;
+		b.y = -1;
+		b.z = -1;
+		mat4 translate5 = glm::translate(mat4(1.0f), vec3(0.0f, -0.30f, -3.0f));
+		M = translate5 * rotAll * translateBut * scale3;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+
+		// Button 4
+		b.x = -1;
+		b.y = -1;
+		b.z = -1;
+		translateBut = glm::translate(mat4(1.0f), vec3(0.0, 0.0, 0.20));
+		mat4 translate6 = glm::translate(mat4(1.0f), vec3(0.0f, -0.10f, -3.0f));
+		M = translate6 * rotAll * translateBut * scale3;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+		// Button 5
+		b.x = -1;
+		b.y = -1;
+		b.z = -1;
+		mat4 translate7 = glm::translate(mat4(1.0f), vec3(0.0f, 0.05f, -3.0f));
+		M = translate7 * rotAll * translateBut * scale3;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+		// Eye 1 
+		b.x =  1;
+		b.y = 0;
+		b.z = 0;
+		translateBut = glm::translate(mat4(1.0f), vec3(0.0, 0.0, 0.17));
+		mat4 translate8 = glm::translate(mat4(1.0f), vec3(-0.06f, 0.40f, -3.0f));
+		mat4 scale4 = glm::scale(mat4(1.0f), vec3(0.015f, 0.015f, 0.015f));
+		M = translate8 * rotAll * translateBut * scale4;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+
+		// Eye 2
+		b.x = 1;
+		b.y = 0;
+		b.z = 0;
+
+		translateBut = glm::translate(mat4(1.0f), vec3(0.12, 0.0, 0.17));
+		mat4 translate9 = glm::translate(mat4(1.0f), vec3(-0.06f, 0.40f, -3.0f));
+		M = translate9 * rotAll * translateBut * scale4;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+
+		// Eye Brow 1
+		b.x = 0.50196078431;
+		b.y = 0;
+		b.z = 0;
+
+		mat4 browS = glm::scale(mat4(1.0f), vec3(0.045, 0.015, 0.01));
+		mat4 browT = glm::translate(mat4(1.0f), vec3(-0.01, 0.48, -2.824f));
+		mat4 browR = glm::rotate(mat4(1.0f), -0.785398f, vec3(0.0, 0.0, 1.0));
+		M = browT*rotAll*browR*browS;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+
+
+		// Eye Brow 2
+		b.x = 0.50196078431;
+		b.y = 0;
+		b.z = 0;
+
+		browT = glm::translate(mat4(1.0f), vec3(0.13, 0.48, -2.88f));
+		browR = glm::rotate(mat4(1.0f), 0.785398f, vec3(0.0, 0.0, 1.0));
+		M = browT * rotAll * browR * browS;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+
+		// Mouth 
+		b.x = -1;
+		b.y = -1;
+		b.z = -1;
+		translateBut = glm::translate(mat4(1.0f), vec3(0.01, 0.0, 0.15));
+		mat4 translateM = glm::translate(mat4(1.0f), vec3(0.0f, 0.25f, -3.0f));
+		mat4 scaleM = glm::scale(mat4(1.0f), vec3(0.015f, 0.015f, 0.015f));
+		mat4 rotateM = glm::rotate(mat4(1.0f), 0.785398f, vec3(0.0, 0.0, 1.0));
+		M = translateM * rotAll * translateBut * rotateM* scaleM;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+		// Mouth 1
+		b.x = -1;
+		b.y = -1;
+		b.z = -1;
+		translateBut = glm::translate(mat4(1.0f), vec3(0.06f, 0.005, 0.15));
+		mat4 translateM1 = glm::translate(mat4(1.0f), vec3(0.0f, 0.25f, -3.0f));
+		mat4 scaleM1 = glm::scale(mat4(1.0f), vec3(0.015f, 0.015f, 0.015f));
+		mat4 rotateM1 = glm::rotate(mat4(1.0f), 0.785398f, vec3(0.0, 0.0, 1.0));
+		M = translateM1 * rotAll * translateBut * rotateM1 * scaleM1;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+	
+		// Mouth 2
+		b.x = -1;
+		b.y = -1;
+		b.z = -1;
+		translateBut = glm::translate(mat4(1.0f), vec3(0.11f, 0.025, 0.15));
+		mat4 translateM2 = glm::translate(mat4(1.0f), vec3(0.0f, 0.25f, -3.0f));
+		mat4 scaleM2 = glm::scale(mat4(1.0f), vec3(0.015f, 0.015f, 0.015f));
+		mat4 rotateM2 = glm::rotate(mat4(1.0f), 0.785398f, vec3(0.0, 0.0, 1.0));
+		M = translateM2 * rotAll * translateBut * rotateM2 * scaleM2;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+		// Mouth 3
+		b.x = -1;
+		b.y = -1;
+		b.z = -1;
+		translateBut = glm::translate(mat4(1.0f), vec3(-0.04f, 0.005, 0.15));
+		mat4 translateM3 = glm::translate(mat4(1.0f), vec3(0.0f, 0.25f, -3.0f));
+		mat4 scaleM3 = glm::scale(mat4(1.0f), vec3(0.015f, 0.015f, 0.015f));
+		mat4 rotateM3 = glm::rotate(mat4(1.0f), 0.785398f, vec3(0.0, 0.0, 1.0));
+		M = translateM3 * rotAll * translateBut * rotateM1 * scaleM3;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+		// Mouth 4
+		b.x = -1;
+		b.y = -1;
+		b.z = -1;
+		translateBut = glm::translate(mat4(1.0f), vec3(-0.08f, 0.025, 0.15));
+		mat4 translateM4 = glm::translate(mat4(1.0f), vec3(0.0f, 0.25f, -3.0f));
+		mat4 scaleM4 = glm::scale(mat4(1.0f), vec3(0.015f, 0.015f, 0.015f));
+		mat4 rotateM4 = glm::rotate(mat4(1.0f), 0.785398f, vec3(0.0, 0.0, 1.0));
+		M = translateM4 * rotAll * translateBut * rotateM4 * scaleM4;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
 		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
 		glBindVertexArray(0);
+		// Hat
+		glBindVertexArray(triVAO);
+		b.x = 0;
+		b.y = 0;
+		b.z = 0;
+		mat4 hatS = glm::scale(mat4(1.0f), vec3(0.25f, 0.45f, 0.9f));
+		mat4 hatT = glm::translate(mat4(1.0f), vec3(0.0, 0.65f, -3.0f));
+		M = hatT*rotAll* hatS;
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+
+
+		// Nose
+		b.x = 0;
+		b.y = 0;
+		b.z = 0;
+		mat4 noseS = glm::scale(mat4(1.0f), vec3(0.1f, 0.3f, 0.9f));
+		mat4 noseT = glm::translate(mat4(1.0f), vec3(0.08, 0.35f, -2.8f));
+		mat4 noseR = glm::rotate(mat4(1.0f), 1.5708f, vec3(0.0, 1.0, 0.0));
+		mat4 noseR2 = glm::rotate(mat4(1.0f), 1.5708f, vec3(1.0, 0.0, 0.0));
+		M = noseT * rotAll* noseR2* noseR * noseS;
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawArrays(GL_TRIANGLES, 3, 6);
+		glBindVertexArray(0);
 		prog->unbind();
+
+
+
 	}
 
 };
