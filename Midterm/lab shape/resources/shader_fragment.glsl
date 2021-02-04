@@ -16,11 +16,6 @@ else if(black.x == 0 && black.z == 0)
 	color.rgb = vertex_color;
 	color.a = 1;
 }
-else if(black.z == 0.8)
-{
-	color.rgb = black;
-	color.a = 0.1;
-}
 else
 {
 	color.rgb = black;
