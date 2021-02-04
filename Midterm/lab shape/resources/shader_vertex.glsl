@@ -11,4 +11,5 @@ void main()
 	vertex_pos = vertPos.xyz;
 	vertex_color = vertColor;
 	gl_Position = P * V * M * vec4(vertPos, 1.0);
+	gl_PointSize = 20.0f;
 }

@@ -1,5 +1,5 @@
 #version 330 core
-out vec3 color;
+out vec4 color;
 in vec3 vertex_pos;
 in vec3 vertex_color;
 uniform vec3 black;
@@ -7,9 +7,23 @@ void main()
 {
 //color = vec3(1,1,1);
 if(black.x == -1)
-	color = vertex_color + black;
-else if(black.x == 0)
-	color = vertex_color;
+{
+	color.rgb = vertex_color + black;
+	color.a = 1;
+}
+else if(black.x == 0 && black.z == 0)
+{
+	color.rgb = vertex_color;
+	color.a = 1;
+}
+else if(black.z == 0.8)
+{
+	color.rgb = black;
+	color.a = 0.1;
+}
 else
-	color = black;
+{
+	color.rgb = black;
+	color.a = 1;
+}
 }

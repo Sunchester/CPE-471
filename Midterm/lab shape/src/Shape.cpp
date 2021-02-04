@@ -225,25 +225,25 @@ void Shape::draw(const shared_ptr<Program> prog) const
 		glVertexAttribPointer(h_pos, 3, GL_FLOAT, GL_FALSE, 0, (const void *)0);
 
 		// Bind normal buffer
-		h_nor = prog->getAttribute("vertNor");
-		if (h_nor != -1 && norBufID[i] != 0)
-		{
-			GLSL::enableVertexAttribArray(h_nor);
-			glBindBuffer(GL_ARRAY_BUFFER, norBufID[i]);
-			glVertexAttribPointer(h_nor, 3, GL_FLOAT, GL_FALSE, 0, (const void *)0);
-		}
+		//h_nor = prog->getAttribute("vertNor");
+		//if (h_nor != -1 && norBufID[i] != 0)
+		//{
+		//	GLSL::enableVertexAttribArray(h_nor);
+		//	glBindBuffer(GL_ARRAY_BUFFER, norBufID[i]);
+		//	glVertexAttribPointer(h_nor, 3, GL_FLOAT, GL_FALSE, 0, (const void *)0);
+		//}
 
-		if (texBufID[i] != 0)
-		{
-			// Bind texcoords buffer
-			h_tex = prog->getAttribute("vertTex");
-			if (h_tex != -1 && texBufID[i] != 0)
-			{
-				GLSL::enableVertexAttribArray(h_tex);
-				glBindBuffer(GL_ARRAY_BUFFER, texBufID[i]);
-				glVertexAttribPointer(h_tex, 2, GL_FLOAT, GL_FALSE, 0, (const void *)0);
-			}
-		}
+		//if (texBufID[i] != 0)
+		//{
+		//	// Bind texcoords buffer
+		//	h_tex = prog->getAttribute("vertTex");
+		//	if (h_tex != -1 && texBufID[i] != 0)
+		//	{
+		//		GLSL::enableVertexAttribArray(h_tex);
+		//		glBindBuffer(GL_ARRAY_BUFFER, texBufID[i]);
+		//		glVertexAttribPointer(h_tex, 2, GL_FLOAT, GL_FALSE, 0, (const void *)0);
+		//	}
+		//}
 
 		// Bind element buffer
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eleBufID[i]);

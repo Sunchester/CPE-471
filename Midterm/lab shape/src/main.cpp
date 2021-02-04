@@ -35,7 +35,7 @@ public:
 	camera()
 	{
 		w = a = s = d = 0;
-		pos = rot = glm::vec3(0, 0, 0);
+		pos = rot = glm::vec3(0, 0, -1.5);
 	}
 	glm::mat4 process(double ftime)
 	{
@@ -68,6 +68,11 @@ float armRotation = 0;
 float armRotationDown = 0;
 float armRotationRight = 0;
 float armRotationRightDown = 0;
+float repeatMovement = 0;
+float LegUp = 0;
+float LegDown = 0;
+float LegUpR = 0;
+float LegDownR = 0;
 class Application : public EventCallbacks
 {
 
@@ -79,10 +84,10 @@ public:
 	std::shared_ptr<Program> prog;
 
 	// Contains vertex information for OpenGL
-	GLuint VertexArrayID, triVAO;
+	GLuint VertexArrayID, triVAO, snowVAO;
 
 	// Data necessary to give our box to OpenGL
-	GLuint VertexBufferID, VertexColorIDBox, IndexBufferIDBox, triVBO, triColor;
+	GLuint VertexBufferID, VertexColorIDBox, IndexBufferIDBox, triVBO, triColor, snowVBO, snowColor;
 
 	void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
 	{
@@ -162,6 +167,56 @@ public:
 			armRotationRightDown = 0;
 		}
 
+		if (key == GLFW_KEY_X && action == GLFW_PRESS)
+		{
+			repeatMovement = 1;
+		}
+
+		if (key == GLFW_KEY_C && action == GLFW_RELEASE)
+		{
+			repeatMovement = 0;
+		}
+
+		if (key == GLFW_KEY_V && action == GLFW_PRESS)
+		{
+			LegUp = 1;
+		}
+
+		if (key == GLFW_KEY_V && action == GLFW_RELEASE)
+		{
+			LegUp = 0;
+		}
+
+		if (key == GLFW_KEY_B && action == GLFW_PRESS)
+		{
+			LegDown = 1;
+		}
+
+		if (key == GLFW_KEY_B && action == GLFW_RELEASE)
+		{
+			LegDown = 0;
+		}
+
+		if (key == GLFW_KEY_G && action == GLFW_PRESS)
+		{
+			LegUpR = 1;
+		}
+
+		if (key == GLFW_KEY_G && action == GLFW_RELEASE)
+		{
+			LegUpR = 0;
+		}
+
+		if (key == GLFW_KEY_H && action == GLFW_PRESS)
+		{
+			LegDownR = 1;
+		}
+
+		if (key == GLFW_KEY_H && action == GLFW_RELEASE)
+		{
+			LegDownR = 0;
+		}
+
 	}
 
 	// callback for the mouse when clicked move the triangle when helper functions
@@ -190,12 +245,7 @@ public:
 	/*Note that any gl calls must always happen after a GL state is initialized */
 	void initGeom()
 	{
-		string resourceDirectory = "../resources" ;
-		// Initialize mesh.
-	
-		shape.loadMesh(resourceDirectory + "/t800.obj");
-		shape.resize();
-		shape.init();
+		
 
 		//generate the VAO
 		glGenVertexArrays(1, &VertexArrayID);
@@ -336,6 +386,50 @@ public:
 		glEnableVertexAttribArray(1);
 		//key function to get up how many elements to pull out at a time (3)
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+		glBindVertexArray(0);
+
+		//generate the VAO
+		glGenVertexArrays(1, &snowVAO);
+		glBindVertexArray(snowVAO);
+
+		//generate vertex buffer to hand off to OGL
+		glGenBuffers(1, &snowVBO);
+		//set the current state to focus on our vertex buffer
+		glBindBuffer(GL_ARRAY_BUFFER, snowVBO);
+
+		static const GLfloat snow_v[] =
+		{
+			0.0f, 0.90f, -2.5f,
+
+		};
+		glBufferData(GL_ARRAY_BUFFER, sizeof(snow_v), snow_v, GL_DYNAMIC_DRAW);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+		glGenBuffers(1, &snowColor);
+		//set the current state to focus on our vertex buffer
+		glBindBuffer(GL_ARRAY_BUFFER, snowColor);
+		static const GLfloat scolors[] =
+		{
+			1.0f, 1.0f, 1.0f,
+			
+		};
+
+		glBufferData(GL_ARRAY_BUFFER, sizeof(scolors), scolors, GL_DYNAMIC_DRAW);
+
+		//we need to set up the vertex array
+		glEnableVertexAttribArray(1);
+		//key function to get up how many elements to pull out at a time (3)
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+		glBindVertexArray(0);
+
+		string resourceDirectory = "../resources";
+		// Initialize mesh.
+
+		shape.loadMesh(resourceDirectory + "/sphere.obj");
+		shape.resize();
+		shape.init();
 	}
 
 	
@@ -350,7 +444,9 @@ public:
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		// Enable z-buffer test.
 		glEnable(GL_DEPTH_TEST);
-
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glEnable(GL_PROGRAM_POINT_SIZE);
 		// Initialize the GLSL program.
 		prog = std::make_shared<Program>();
 		prog->setVerbose(true);
@@ -372,12 +468,29 @@ public:
 	********/
 	void render()
 	{
+		static float legLift = 0.0;
+		static float legLiftR = 0.0;
+		static int repeat = 1;
+		static float handRot = 0.0;
 		static float upperL = 0.0;
 		static float upperR = 0.0;
 		static float LeftArm = 0.0;
 		static float RightArm = 0.0;
+		static float snowFall = 0.0;
+		static float snowFall2 = 0.0;
 		double frametime = get_last_elapsed_time();
+		snowFall += 0.001;
+		snowFall2 += 0.0015;
+		if (snowFall >= 1.75f)
+		{
+			snowFall = 0.0f;
+		}
+		if (snowFall2 >= 1.75f)
+		{
+			snowFall2 = 0.0f;
 
+		}
+		
 		// Get current frame buffer size.
 		int width, height;
 		glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
@@ -410,7 +523,6 @@ public:
 
 		// Draw the box using GLSL.
 		prog->bind();
-
 		vec3 b(0, 0, 0);
 		V = mycam.process(frametime);
 		glBindVertexArray(VertexArrayID);
@@ -657,7 +769,7 @@ public:
 			LeftArm += 0.01;
 			if(upperL <= 1.85)
 				upperL += 0.011;
-			std::cout << upperL << endl;
+			
 		}
 
 		if (armRotationDown == 1 && LeftArm >= -0.7f)
@@ -710,6 +822,7 @@ public:
 		mat4 armLuR = glm::rotate(mat4(1.0f), 1.309f + upperL, vec3(0.0, 0.0, 1.0));
 		mat4 armLuS = glm::scale(mat4(1.0f), vec3(0.02, 0.15, 0.02));
 		M = LoM * armLuT * rotAll* armLuR * armLuTO * armLuS;
+		mat4 saveArm = LoM * armLuT * armLuR * armLuTO;
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
 		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
 		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
@@ -744,15 +857,457 @@ public:
 		mat4 armRuR = glm::rotate(mat4(1.0f), -1.309f - upperR, vec3(0.0, 0.0, 1.0));
 		mat4 armRuS = glm::scale(mat4(1.0f), vec3(0.02, 0.15, 0.02));
 		M = RoM * armRuT * rotAll * armRuR * armRuTO * armRuS;
-
+		mat4 saveArmR = RoM * armRuT * armRuR * armRuTO;
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
 		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
 		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
 		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
 		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
 
+
+		if (repeatMovement == 1 && repeat == 1 && handRot <= 0.3f)
+		{
+			handRot += 0.01;
+			if (handRot >= 0.3f)
+			{
+				repeat = -1;
+			}
+		}
+		if (repeatMovement == 1 && repeat == -1 && handRot >= -0.3)
+		{
+			handRot -= 0.01;
+			if (handRot <= -0.3f)
+			{
+				repeat = 1;
+			}
+		}
+		if (repeatMovement == 0)
+		{
+			handRot = 0;
+		}
+		
+		// Left Hand
+		b.x = 0.5450980392156863;
+		b.y = 0.2705882352941176;
+		b.z = 0.0745098039215686;
+
+		mat4 handLT = glm::translate(mat4(1.0f), vec3(0.005f, 0.165f, 0.065f));
+		mat4 handLTO = glm::translate(mat4(1.0f), vec3(0.0f, -0.01f, 0.0f));
+		mat4 handLR = glm::rotate(mat4(1.0f), 1.309f - handRot, vec3(0.0, 0.0, 1.0));
+		mat4 handLS = glm::scale(mat4(1.0f), vec3(0.03, 0.02, 0.03));
+		M = saveArm * handLT * rotAll * handLR * handLTO * handLS;
+		mat4 saveHand = saveArm * handLT * handLR * handLTO;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+
+		// Left Fingers 
+		b.x = 0.5450980392156863;
+		b.y = 0.2705882352941176;
+		b.z = 0.0745098039215686;
+
+		mat4 fingerLT = glm::translate(mat4(1.0f), vec3(0.0f, 0.05f, 0.0f));
+		mat4 fingerLS = glm::scale(mat4(1.0f), vec3(0.01, 0.08, 0.01));
+		M = saveHand * fingerLT * rotAll * fingerLS;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+
+
+		// Left Fingers 2
+		b.x = 0.5450980392156863;
+		b.y = 0.2705882352941176;
+		b.z = 0.0745098039215686;
+
+		mat4 fingerL2T = glm::translate(mat4(1.0f), vec3(0.05f, -0.015f, 0.0f));
+		mat4 fingerL2S = glm::scale(mat4(1.0f), vec3(0.08, 0.01, 0.01));
+		M = saveHand * fingerL2T * rotAll * fingerL2S;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+		// Left Fingers 3
+		b.x = 0.5450980392156863;
+		b.y = 0.2705882352941176;
+		b.z = 0.0745098039215686;
+
+		mat4 fingerL3T = glm::translate(mat4(1.0f), vec3(0.0f, -0.05f, 0.0f));
+		mat4 fingerL3S = glm::scale(mat4(1.0f), vec3(0.01, 0.08, 0.01));
+		M = saveHand * fingerL3T * rotAll * fingerL3S;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+
+		// Right Hand
+		b.x = 0.5450980392156863;
+		b.y = 0.2705882352941176;
+		b.z = 0.0745098039215686;
+
+		mat4 handRT = glm::translate(mat4(1.0f), vec3(-0.01f, 0.18f, -0.05f));
+		mat4 handRTO = glm::translate(mat4(1.0f), vec3(0.0f, 0.0f, 0.0f));
+		mat4 handRR = glm::rotate(mat4(1.0f), 1.309f - handRot, vec3(0.0, 0.0, 1.0));
+		mat4 handRS = glm::scale(mat4(1.0f), vec3(0.03, 0.02, 0.03));
+		M = saveArmR * handRT * rotAll * handRR * handRTO * handRS;
+		mat4 saveHandR = saveArmR * handRT * handRR * handRTO;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+		// Right Fingers
+		b.x = 0.5450980392156863;
+		b.y = 0.2705882352941176;
+		b.z = 0.0745098039215686;
+
+		mat4 fingerRT = glm::translate(mat4(1.0f), vec3(0.0f, 0.08f, 0.0f));
+		mat4 fingerRS = glm::scale(mat4(1.0f), vec3(0.01, 0.08, 0.01));
+		M = saveHandR * fingerRT * rotAll * fingerRS;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+
+		// Right Fingers 2
+		b.x = 0.5450980392156863;
+		b.y = 0.2705882352941176;
+		b.z = 0.0745098039215686;
+
+		mat4 fingerR2T = glm::translate(mat4(1.0f), vec3(0.05f, -0.01f, 0.0f));
+		mat4 fingerR2S = glm::scale(mat4(1.0f), vec3(0.08, 0.01, 0.01));
+		M = saveHandR * fingerR2T * rotAll * fingerR2S;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+
+		// Left Fingers 3
+		b.x = 0.5450980392156863;
+		b.y = 0.2705882352941176;
+		b.z = 0.0745098039215686;
+
+		mat4 fingerR3T = glm::translate(mat4(1.0f), vec3(0.0f, -0.05f, 0.0f));
+		mat4 fingerR3S = glm::scale(mat4(1.0f), vec3(0.01, 0.08, 0.01));
+		M = saveHandR * fingerR3T * rotAll * fingerR3S;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+
+		// Left Leg
+
+		if (LegUp == 1 && legLift >= -1.5f)
+		{
+			legLift -= 0.01;
+		}
+		if (LegDown == 1 && legLift <= 1.2f)
+		{
+			legLift += 0.01;
+		}
+		b.x = 0.5450980392156863;
+		b.y = 0.2705882352941176;
+		b.z = 0.0745098039215686;
+	
+		mat4 legLT = glm::translate(mat4(1.0f), vec3(-0.15f, -0.70f, -3.0f));
+		mat4 legLTO = glm::translate(mat4(1.0f), vec3(0.0f, -0.145f, 0.0f));
+		mat4 legLR = glm::rotate(mat4(1.0f), 0.0f + legLift, vec3(1.0, 0.0, 0.0));
+		mat4 legLS = glm::scale(mat4(1.0f), vec3(0.02, 0.15, 0.02));
+		M = legLT * rotAll * legLR * legLTO * legLS;
+		
+		mat4 leftLegSave = legLT * legLR * legLTO;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+		// Right Leg
+		if (LegUpR == 1 && legLiftR >= -1.5f)
+		{
+			legLiftR -= 0.01;
+		}
+		if (LegDownR == 1 && legLiftR <= 1.2f)
+		{
+			legLiftR += 0.01;
+		}
+
+		b.x = 0.5450980392156863;
+		b.y = 0.2705882352941176;
+		b.z = 0.0745098039215686;
+
+		mat4 legRT = glm::translate(mat4(1.0f), vec3(-0.15f, -0.70f, -3.0f));
+		mat4 legRTA = glm::translate(mat4(1.0f), vec3(0.30f, 0.0f, 0.0f));
+		mat4 legRTO = glm::translate(mat4(1.0f), vec3(0.0f, -0.145f, 0.0f));
+		mat4 legRR = glm::rotate(mat4(1.0f), 0.0f + legLiftR, vec3(1.0, 0.0, 0.0));
+		mat4 legRS = glm::scale(mat4(1.0f), vec3(0.02, 0.15, 0.02));
+		M = legRT * rotAll* legRTA * legRR * legRTO * legRS;
+
+		mat4 rightLegSave = legRT * legRR * legRTO;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+		// Left Lower Leg
+
+
+		// Right Lower Leg
+
+
+		// Left Foot 
+		// Right Foot
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 		glBindVertexArray(0);
 
+		// Snow
+		glBindVertexArray(snowVAO);
+		b.x = 0.0;
+		b.y = 0.0;
+		b.z = 0.0;
+		mat4 move = glm::translate(mat4(1.0f), vec3(0.0f, 0.0f - snowFall, 0.0));
+		M = move;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawArrays(GL_POINTS, 0, 1);
+
+		// Snow
+		b.x = 0.0;
+		b.y = 0.0;
+		b.z = 0.0;
+		move = glm::translate(mat4(1.0f), vec3(-0.3f, 0.0f - snowFall2, 0.0));
+		M = move;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawArrays(GL_POINTS, 0, 1);
+
+
+		// Snow
+		b.x = 0.0;
+		b.y = 0.0;
+		b.z = 0.0;
+		move = glm::translate(mat4(1.0f), vec3(0.3f, -0.1f - snowFall, 0.0));
+		M = move;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawArrays(GL_POINTS, 0, 1);
+
+
+		// Snow
+		b.x = 0.0;
+		b.y = 0.0;
+		b.z = 0.0;
+		move = glm::translate(mat4(1.0f), vec3(0.15f, -0.1f - snowFall2, 0.0));
+		M = move;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawArrays(GL_POINTS, 0, 1);
+
+
+		// Snow
+		b.x = 0.0;
+		b.y = 0.0;
+		b.z = 0.0;
+		move = glm::translate(mat4(1.0f), vec3(0.05f, -0.12f - snowFall, 0.0));
+		M = move;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawArrays(GL_POINTS, 0, 1);
+
+
+		// Snow
+		b.x = 0.0;
+		b.y = 0.0;
+		b.z = 0.0;
+		move = glm::translate(mat4(1.0f), vec3(-0.23f, -0.24f - snowFall2, 0.0));
+		M = move;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawArrays(GL_POINTS, 0, 1);
+
+
+		// Snow
+		b.x = 0.0;
+		b.y = 0.0;
+		b.z = 0.0;
+		move = glm::translate(mat4(1.0f), vec3(0.12f, 0.0f - snowFall, 0.0));
+		M = move;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawArrays(GL_POINTS, 0, 1);
+
+
+		// Snow
+		b.x = 0.0;
+		b.y = 0.0;
+		b.z = 0.0;
+		move = glm::translate(mat4(1.0f), vec3(-0.05f, 0.0f - snowFall2, 0.0));
+		M = move;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawArrays(GL_POINTS, 0, 1);
+
+
+
+		// Snow
+		b.x = 0.0;
+		b.y = 0.0;
+		b.z = 0.0;
+		move = glm::translate(mat4(1.0f), vec3(0.29f, 0.0f - snowFall, 0.0));
+		M = move;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawArrays(GL_POINTS, 0, 1);
+
+
+		// Snow
+		b.x = 0.0;
+		b.y = 0.0;
+		b.z = 0.0;
+		move = glm::translate(mat4(1.0f), vec3(-0.33f, 0.2f - snowFall2, 0.0));
+		M = move;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawArrays(GL_POINTS, 0, 1);
+
+
+
+
+		// Snow
+		b.x = 0.0;
+		b.y = 0.0;
+		b.z = 0.0;
+		move = glm::translate(mat4(1.0f), vec3(0.06f, 0.08f - snowFall, 0.0));
+		M = move;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawArrays(GL_POINTS, 0, 1);
+
+
+		// Snow
+		b.x = 0.0;
+		b.y = 0.0;
+		b.z = 0.0;
+		move = glm::translate(mat4(1.0f), vec3(-0.11f, 0.07f - snowFall2, 0.0));
+		M = move;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawArrays(GL_POINTS, 0, 1);
+
+
+
+		// Snow
+		b.x = 0.0;
+		b.y = 0.0;
+		b.z = 0.0;
+		move = glm::translate(mat4(1.0f), vec3(0.089f, 0.03f - snowFall, 0.0));
+		M = move;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawArrays(GL_POINTS, 0, 1);
+
+
+		// Snow
+		b.x = 0.0;
+		b.y = 0.0;
+		b.z = 0.0;
+		move = glm::translate(mat4(1.0f), vec3(-0.134f, 0.16f - snowFall2, 0.0));
+		M = move;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawArrays(GL_POINTS, 0, 1);
+
+
+		// Snow
+		b.x = 0.0;
+		b.y = 0.0;
+		b.z = 0.0;
+		move = glm::translate(mat4(1.0f), vec3(0.4f, -0.20f - snowFall, 0.0));
+		M = move;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawArrays(GL_POINTS, 0, 1);
+
+
+		// Snow
+		b.x = 0.0;
+		b.y = 0.0;
+		b.z = 0.0;
+		move = glm::translate(mat4(1.0f), vec3(-0.35f, 0.0f - snowFall2, 0.0));
+		M = move;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		glDrawArrays(GL_POINTS, 0, 1);
+
+
+
+		glBindVertexArray(0);
 		// Hat
 		glBindVertexArray(triVAO);
 		b.x = 0;
@@ -778,7 +1333,27 @@ public:
 		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
 		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
 		glDrawArrays(GL_TRIANGLES, 3, 6);
+
+
+		// another shader file
+		b.x = 0.0;
+		b.y = 0.0;
+		b.z = 0.8;
+		mat4 sphereS = glm::scale(mat4(1.0f), vec3(1.3, 1.3, 1.3));
+		mat4 translateS = glm::translate(mat4(1.0f), vec3(0, 0, -3));
+		M = translateS*sphereS;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("black"), 1, value_ptr(b));
+		shape.draw(prog);
+
 		glBindVertexArray(0);
+
+
+		
+
+
 		prog->unbind();
 
 
