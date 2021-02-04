@@ -432,6 +432,7 @@ public:
 		shape.loadMesh(resourceDirectory + "/sphere.obj");
 		shape.resize();
 		shape.init();
+		
 	}
 
 	
@@ -468,8 +469,6 @@ public:
 		prog2->addUniform("V");
 		prog2->addUniform("M");
 		prog2->addAttribute("vertPos");
-		prog2->addAttribute("vertNor");
-		prog2->addAttribute("vertTex");
 		prog2->addUniform("black");
 		
 	}
@@ -839,7 +838,7 @@ public:
 		mat4 armLuR = glm::rotate(mat4(1.0f), 1.309f + upperL, vec3(0.0, 0.0, 1.0));
 		mat4 armLuS = glm::scale(mat4(1.0f), vec3(0.02, 0.15, 0.02));
 		M = LoM * armLuT * rotAll* armLuR * armLuTO * armLuS;
-		mat4 saveArm = LoM * armLuT * armLuR * armLuTO;
+		mat4 saveArm = LoM * armLuT* rotAll* armLuR * armLuTO;
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
 		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
 		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
@@ -908,10 +907,10 @@ public:
 		b.y = 0.2705882352941176;
 		b.z = 0.0745098039215686;
 
-		mat4 handLT = glm::translate(mat4(1.0f), vec3(-0.01f, 0.175f, 0.05f));
+		mat4 handLT = glm::translate(mat4(1.0f), vec3(-0.01f, 0.175f, 0.00f));
 		mat4 handLTO = glm::translate(mat4(1.0f), vec3(0.0f, -0.01f, 0.0f));
 		mat4 handLR = glm::rotate(mat4(1.0f), 1.309f - handRot, vec3(0.0, 0.0, 1.0));
-		mat4 handLS = glm::scale(mat4(1.0f), vec3(0.03, 0.02, 0.03));
+		mat4 handLS = glm::scale(mat4(1.0f), vec3(0.02, 0.01, 0.02));
 		M = saveArm * handLT * rotAll * handLR * handLTO * handLS;
 		mat4 saveHand = saveArm * handLT * rotAll * handLR * handLTO;
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
@@ -926,8 +925,8 @@ public:
 		b.y = 0.2705882352941176;
 		b.z = 0.0745098039215686;
 
-		mat4 fingerLT = glm::translate(mat4(1.0f), vec3(0.0f, 0.05f, 0.0f));
-		mat4 fingerLS = glm::scale(mat4(1.0f), vec3(0.01, 0.08, 0.01));
+		mat4 fingerLT = glm::translate(mat4(1.0f), vec3(0.0f, 0.1f, 0.0f));
+		mat4 fingerLS = glm::scale(mat4(1.0f), vec3(0.01, 0.1, 0.01));
 		M = saveHand * fingerLT * rotAll * fingerLS;
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
 		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
@@ -942,9 +941,10 @@ public:
 		b.y = 0.2705882352941176;
 		b.z = 0.0745098039215686;
 
-		mat4 fingerL2T = glm::translate(mat4(1.0f), vec3(0.05f, -0.015f, 0.0f));
-		mat4 fingerL2S = glm::scale(mat4(1.0f), vec3(0.08, 0.01, 0.01));
-		M = saveHand * fingerL2T * rotAll * fingerL2S;
+		mat4 fingerL2T = glm::translate(mat4(1.0f), vec3(0.06f, 0.0f, -0.01f));
+		mat4 fingerL2S = glm::scale(mat4(1.0f), vec3(0.01, 0.1, 0.01));
+		mat4 fingerL2R = glm::rotate(mat4(1.0f), 1.5708f, vec3(0.0, 0.0, 1.0));
+		M = saveHand * fingerL2T * rotAll* fingerL2R* fingerL2S;
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
 		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
 		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
@@ -956,8 +956,8 @@ public:
 		b.y = 0.2705882352941176;
 		b.z = 0.0745098039215686;
 
-		mat4 fingerL3T = glm::translate(mat4(1.0f), vec3(0.0f, -0.05f, 0.0f));
-		mat4 fingerL3S = glm::scale(mat4(1.0f), vec3(0.01, 0.08, 0.01));
+		mat4 fingerL3T = glm::translate(mat4(1.0f), vec3(0.0f, -0.1f, 0.0f));
+		mat4 fingerL3S = glm::scale(mat4(1.0f), vec3(0.01, 0.1, 0.01));
 		M = saveHand * fingerL3T * rotAll * fingerL3S;
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
 		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
@@ -971,12 +971,12 @@ public:
 		b.y = 0.2705882352941176;
 		b.z = 0.0745098039215686;
 
-		mat4 handRT = glm::translate(mat4(1.0f), vec3(-0.01f, 0.18f, 0.00f));
-		mat4 handRTO = glm::translate(mat4(1.0f), vec3(0.0f, 0.0f, 0.0f));
+		mat4 handRT = glm::translate(mat4(1.0f), vec3(-0.01f, 0.175f, 0.00f));
+		mat4 handRTO = glm::translate(mat4(1.0f), vec3(0.0f, -0.01f, 0.0f));
 		mat4 handRR = glm::rotate(mat4(1.0f), 1.309f - handRot, vec3(0.0, 0.0, 1.0));
-		mat4 handRS = glm::scale(mat4(1.0f), vec3(0.03, 0.02, 0.03));
+		mat4 handRS = glm::scale(mat4(1.0f), vec3(0.02, 0.01, 0.02));
 		M = saveArmR * handRT * rotAll * handRR * handRTO * handRS;
-		mat4 saveHandR = saveArmR * handRT * handRR * handRTO;
+		mat4 saveHandR = saveArmR * handRT * rotAll* handRR * handRTO;
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
 		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
 		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
@@ -988,8 +988,8 @@ public:
 		b.y = 0.2705882352941176;
 		b.z = 0.0745098039215686;
 
-		mat4 fingerRT = glm::translate(mat4(1.0f), vec3(0.0f, 0.08f, 0.0f));
-		mat4 fingerRS = glm::scale(mat4(1.0f), vec3(0.01, 0.08, 0.01));
+		mat4 fingerRT = glm::translate(mat4(1.0f), vec3(0.0f, 0.1f, 0.0f));
+		mat4 fingerRS = glm::scale(mat4(1.0f), vec3(0.01, 0.1, 0.01));
 		M = saveHandR * fingerRT * rotAll * fingerRS;
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
 		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
@@ -1003,9 +1003,11 @@ public:
 		b.y = 0.2705882352941176;
 		b.z = 0.0745098039215686;
 
-		mat4 fingerR2T = glm::translate(mat4(1.0f), vec3(0.05f, -0.01f, 0.0f));
-		mat4 fingerR2S = glm::scale(mat4(1.0f), vec3(0.08, 0.01, 0.01));
-		M = saveHandR * fingerR2T * rotAll * fingerR2S;
+		mat4 fingerR2T = glm::translate(mat4(1.0f), vec3(0.06f, 0.0f, -0.01f));
+		mat4 fingerR2S = glm::scale(mat4(1.0f), vec3(0.01, 0.1, 0.01));
+		mat4 fingerR2R = glm::rotate(mat4(1.0f), 1.5708f, vec3(0.0, 0.0, 1.0));
+
+		M = saveHandR * fingerR2T * rotAll* fingerR2R* fingerR2S;
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
 		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
 		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
@@ -1013,13 +1015,13 @@ public:
 		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
 
 
-		// Left Fingers 3
+		// Right Fingers 3
 		b.x = 0.5450980392156863;
 		b.y = 0.2705882352941176;
 		b.z = 0.0745098039215686;
 
-		mat4 fingerR3T = glm::translate(mat4(1.0f), vec3(0.0f, -0.05f, 0.0f));
-		mat4 fingerR3S = glm::scale(mat4(1.0f), vec3(0.01, 0.08, 0.01));
+		mat4 fingerR3T = glm::translate(mat4(1.0f), vec3(0.0f, -0.1f, 0.0f));
+		mat4 fingerR3S = glm::scale(mat4(1.0f), vec3(0.01, 0.1, 0.01));
 		M = saveHandR * fingerR3T * rotAll * fingerR3S;
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
 		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
@@ -3013,7 +3015,11 @@ public:
 		glUniformMatrix4fv(prog2->getUniform("V"), 1, GL_FALSE, &V[0][0]);
 		glUniformMatrix4fv(prog2->getUniform("M"), 1, GL_FALSE, &M[0][0]);
 		glUniform3fv(prog2->getUniform("black"), 1, value_ptr(b));
+		glEnable(GL_CULL_FACE);
+		glCullFace(GL_BACK);
+		glFrontFace(GL_CCW);
 		shape.draw(prog2);
+		glDisable(GL_CULL_FACE);
 		prog2->unbind();
 
 

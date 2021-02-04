@@ -1,0 +1,25 @@
+WASD for camera movement
+
+M and K for raise arms
+N and J for lower arms
+
+
+B and H for raise legs
+V and G for lower legs
+
+X for repeat animation
+C for stop repeat animation
+
+
+
+Snow Creation: Using VAO and drawing using GL_Points
+
+Custom VAO's: Hat, Nose, Snowman (Everything, body, arms, buttons, etc.) (This took way too long ://)
+
+Loaded OBJ: Sphere
+
+Hierarchical Animations:
+
+Arm 1 -> Arm 2 -> Hand (Both Left and Right)
+
+Leg 1 -> Leg 2 -> Foot (Both Left and Right)
