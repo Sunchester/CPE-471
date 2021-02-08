@@ -324,6 +324,9 @@ public:
 	********/
 	void render()
 	{
+		static int P1points = 0;
+		static int P2points = 0;
+		static float offset = 0.0f;
 		float leftWall = -1.5f;
 		float rightWall = 1.5f;
 		double frametime = get_last_elapsed_time();
@@ -439,33 +442,332 @@ public:
 		glUniform3fv(prog->getUniform("diffcol"), 1, value_ptr(c));
 		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
 
-			
-		glBindVertexArray(0);
+		// P1 Points
+
+		if (P1points >= 1)
+		{
+			c.x = 1;
+			c.y = 0;
+			c.z = 0;
+			mat4 pointp1 = glm::translate(glm::mat4(1.0f), glm::vec3(-2.0f, 1.0f, -3.0f));
+			mat4 pointscale = glm::scale(glm::mat4(1.0f), glm::vec3(0.01f, 0.1f, 0.01f));
+			M = pointp1 * pointscale;
+			glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+			glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+			glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+			glUniform3fv(prog->getUniform("diffcol"), 1, value_ptr(c));
+			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+		}
+		if (P1points >= 2)
+		{
+			c.x = 1;
+			c.y = 0;
+			c.z = 0;
+			mat4 pointp1 = glm::translate(glm::mat4(1.0f), glm::vec3(-1.9f, 1.0f, -3.0f));
+			mat4 pointscale = glm::scale(glm::mat4(1.0f), glm::vec3(0.01f, 0.1f, 0.01f));
+			M = pointp1 * pointscale;
+			glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+			glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+			glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+			glUniform3fv(prog->getUniform("diffcol"), 1, value_ptr(c));
+			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+		}
+		if (P1points >= 3)
+		{
+			c.x = 1;
+			c.y = 0;
+			c.z = 0;
+			mat4 pointp1 = glm::translate(glm::mat4(1.0f), glm::vec3(-1.8f, 1.0f, -3.0f));
+			mat4 pointscale = glm::scale(glm::mat4(1.0f), glm::vec3(0.01f, 0.1f, 0.01f));
+			M = pointp1 * pointscale;
+			glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+			glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+			glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+			glUniform3fv(prog->getUniform("diffcol"), 1, value_ptr(c));
+			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+		}
+		if (P1points >= 4)
+		{
+			c.x = 1;
+			c.y = 0;
+			c.z = 0;
+			mat4 pointp1 = glm::translate(glm::mat4(1.0f), glm::vec3(-1.7f, 1.0f, -3.0f));
+			mat4 pointscale = glm::scale(glm::mat4(1.0f), glm::vec3(0.01f, 0.1f, 0.01f));
+			M = pointp1 * pointscale;
+			glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+			glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+			glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+			glUniform3fv(prog->getUniform("diffcol"), 1, value_ptr(c));
+			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+		}
+		if (P1points >= 5)
+		{
+			c.x = 1;
+			c.y = 0;
+			c.z = 0;
+			mat4 pointp1 = glm::translate(glm::mat4(1.0f), glm::vec3(-1.6f, 1.0f, -3.0f));
+			mat4 pointscale = glm::scale(glm::mat4(1.0f), glm::vec3(0.01f, 0.1f, 0.01f));
+			M = pointp1 * pointscale;
+			glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+			glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+			glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+			glUniform3fv(prog->getUniform("diffcol"), 1, value_ptr(c));
+			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+		}
+
+		if (P1points >= 6)
+		{
+			c.x = 1;
+			c.y = 0;
+			c.z = 0;
+			mat4 pointp1 = glm::translate(glm::mat4(1.0f), glm::vec3(-2.0f, 0.7f, -3.0f));
+			mat4 pointscale = glm::scale(glm::mat4(1.0f), glm::vec3(0.01f, 0.1f, 0.01f));
+			M = pointp1 * pointscale;
+			glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+			glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+			glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+			glUniform3fv(prog->getUniform("diffcol"), 1, value_ptr(c));
+			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+		}
+		if (P1points >= 7)
+		{
+			c.x = 1;
+			c.y = 0;
+			c.z = 0;
+			mat4 pointp1 = glm::translate(glm::mat4(1.0f), glm::vec3(-1.9f, 0.7f, -3.0f));
+			mat4 pointscale = glm::scale(glm::mat4(1.0f), glm::vec3(0.01f, 0.1f, 0.01f));
+			M = pointp1 * pointscale;
+			glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+			glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+			glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+			glUniform3fv(prog->getUniform("diffcol"), 1, value_ptr(c));
+			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+		}
+		if (P1points >= 8)
+		{
+			c.x = 1;
+			c.y = 0;
+			c.z = 0;
+			mat4 pointp1 = glm::translate(glm::mat4(1.0f), glm::vec3(-1.8f, 0.7f, -3.0f));
+			mat4 pointscale = glm::scale(glm::mat4(1.0f), glm::vec3(0.01f, 0.1f, 0.01f));
+			M = pointp1 * pointscale;
+			glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+			glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+			glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+			glUniform3fv(prog->getUniform("diffcol"), 1, value_ptr(c));
+			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+		}
+		if (P1points >= 9)
+		{
+			c.x = 1;
+			c.y = 0;
+			c.z = 0;
+			mat4 pointp1 = glm::translate(glm::mat4(1.0f), glm::vec3(-1.7f, 0.7f, -3.0f));
+			mat4 pointscale = glm::scale(glm::mat4(1.0f), glm::vec3(0.01f, 0.1f, 0.01f));
+			M = pointp1 * pointscale;
+			glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+			glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+			glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+			glUniform3fv(prog->getUniform("diffcol"), 1, value_ptr(c));
+			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+		}
+		if (P1points >= 10)
+		{
+			c.x = 1;
+			c.y = 0;
+			c.z = 0;
+			mat4 pointp1 = glm::translate(glm::mat4(1.0f), glm::vec3(-1.6f, 0.7f, -3.0f));
+			mat4 pointscale = glm::scale(glm::mat4(1.0f), glm::vec3(0.01f, 0.1f, 0.01f));
+			M = pointp1 * pointscale;
+			glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+			glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+			glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+			glUniform3fv(prog->getUniform("diffcol"), 1, value_ptr(c));
+			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+		}
+
+
+		// P2 Points
+		if (P2points >= 1)
+		{
+			c.x = 0.1;
+			c.y = 1;
+			c.z = 0;
+			mat4 pointp1 = glm::translate(glm::mat4(1.0f), glm::vec3(1.6f, 1.0f, -3.0f));
+			mat4 pointscale = glm::scale(glm::mat4(1.0f), glm::vec3(0.01f, 0.1f, 0.01f));
+			M = pointp1 * pointscale;
+			glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+			glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+			glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+			glUniform3fv(prog->getUniform("diffcol"), 1, value_ptr(c));
+			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+		}
+		if (P2points >= 2)
+		{
+			c.x = 0.1;
+			c.y = 1;
+			c.z = 0;
+			mat4 pointp1 = glm::translate(glm::mat4(1.0f), glm::vec3(1.7f, 1.0f, -3.0f));
+			mat4 pointscale = glm::scale(glm::mat4(1.0f), glm::vec3(0.01f, 0.1f, 0.01f));
+			M = pointp1 * pointscale;
+			glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+			glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+			glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+			glUniform3fv(prog->getUniform("diffcol"), 1, value_ptr(c));
+			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+		}
+		if (P2points >= 3)
+		{
+			c.x = 0.1;
+			c.y = 1;
+			c.z = 0;
+			mat4 pointp1 = glm::translate(glm::mat4(1.0f), glm::vec3(1.8f, 1.0f, -3.0f));
+			mat4 pointscale = glm::scale(glm::mat4(1.0f), glm::vec3(0.01f, 0.1f, 0.01f));
+			M = pointp1 * pointscale;
+			glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+			glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+			glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+			glUniform3fv(prog->getUniform("diffcol"), 1, value_ptr(c));
+			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+		}
+		if (P2points >= 4)
+		{
+			c.x = 0.1;
+			c.y = 1;
+			c.z = 0;
+			mat4 pointp1 = glm::translate(glm::mat4(1.0f), glm::vec3(1.9f, 1.0f, -3.0f));
+			mat4 pointscale = glm::scale(glm::mat4(1.0f), glm::vec3(0.01f, 0.1f, 0.01f));
+			M = pointp1 * pointscale;
+			glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+			glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+			glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+			glUniform3fv(prog->getUniform("diffcol"), 1, value_ptr(c));
+			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+		}
+		if (P2points >= 5)
+		{
+			c.x = 0.1;
+			c.y = 1;
+			c.z = 0;
+			mat4 pointp1 = glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, 1.0f, -3.0f));
+			mat4 pointscale = glm::scale(glm::mat4(1.0f), glm::vec3(0.01f, 0.1f, 0.01f));
+			M = pointp1 * pointscale;
+			glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+			glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+			glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+			glUniform3fv(prog->getUniform("diffcol"), 1, value_ptr(c));
+			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+		}
+
+		if (P2points >= 6)
+		{
+			c.x = 0.1;
+			c.y = 1;
+			c.z = 0;
+			mat4 pointp1 = glm::translate(glm::mat4(1.0f), glm::vec3(1.6f, 0.7f, -3.0f));
+			mat4 pointscale = glm::scale(glm::mat4(1.0f), glm::vec3(0.01f, 0.1f, 0.01f));
+			M = pointp1 * pointscale;
+			glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+			glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+			glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+			glUniform3fv(prog->getUniform("diffcol"), 1, value_ptr(c));
+			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+		}
+		if (P2points >= 7)
+		{
+			c.x = 0.1;
+			c.y = 1;
+			c.z = 0;
+			mat4 pointp1 = glm::translate(glm::mat4(1.0f), glm::vec3(1.7f, 0.7f, -3.0f));
+			mat4 pointscale = glm::scale(glm::mat4(1.0f), glm::vec3(0.01f, 0.1f, 0.01f));
+			M = pointp1 * pointscale;
+			glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+			glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+			glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+			glUniform3fv(prog->getUniform("diffcol"), 1, value_ptr(c));
+			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+		}
+		if (P2points >= 8)
+		{
+			c.x = 0.1;
+			c.y = 1;
+			c.z = 0;
+			mat4 pointp1 = glm::translate(glm::mat4(1.0f), glm::vec3(1.8f, 0.7f, -3.0f));
+			mat4 pointscale = glm::scale(glm::mat4(1.0f), glm::vec3(0.01f, 0.1f, 0.01f));
+			M = pointp1 * pointscale;
+			glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+			glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+			glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+			glUniform3fv(prog->getUniform("diffcol"), 1, value_ptr(c));
+			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+		}
+		if (P2points >= 9)
+		{
+			c.x = 0.1;
+			c.y = 1;
+			c.z = 0;
+			mat4 pointp1 = glm::translate(glm::mat4(1.0f), glm::vec3(1.9f, 0.7f, -3.0f));
+			mat4 pointscale = glm::scale(glm::mat4(1.0f), glm::vec3(0.01f, 0.1f, 0.01f));
+			M = pointp1 * pointscale;
+			glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+			glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+			glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+			glUniform3fv(prog->getUniform("diffcol"), 1, value_ptr(c));
+			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+		}
+		if (P2points >= 10)
+		{
+			c.x = 0.1;
+			c.y = 1;
+			c.z = 0;
+			mat4 pointp1 = glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, 0.7f, -3.0f));
+			mat4 pointscale = glm::scale(glm::mat4(1.0f), glm::vec3(0.01f, 0.1f, 0.01f));
+			M = pointp1 * pointscale;
+			glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+			glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+			glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+			glUniform3fv(prog->getUniform("diffcol"), 1, value_ptr(c));
+			glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+		}
+		
 
 		prog->unbind();
 		prog2->bind();
-		
-		float leftP1 = (-1 * 0.2) + position;
-		float rightP1 = (1 * 0.2) + position;
-		float leftP2 = (-1 * 0.2) + position2;
-		float rightP2 = (1 * 0.2) + position2;
-		if ((ballPosition.x >= leftP1 && ballPosition.x <= rightP1) && (ballPosition.z >= -3.6f && ballPosition.z <= -3.55f))
+		if (P1points != 10 && P2points != 10)
 		{
-			ballVelocity = (abs(ballVelocity));
-			ballVelocity *= -1;
-		}
-		if ((ballPosition.x >= leftP2 && ballPosition.x <= rightP2) && (ballPosition.z <= -10.4f && ballPosition.z >= -10.45))
-		{
-			ballVelocity = (abs(ballVelocity));
-		}
-		
-		ballPosition += ballVelocity;
+			float leftP1 = (-1 * 0.2) + position;
+			float rightP1 = (1 * 0.2) + position;
+			float leftP2 = (-1 * 0.2) + position2;
+			float rightP2 = (1 * 0.2) + position2;
+			if ((ballPosition.x >= leftP1 && ballPosition.x <= rightP1) && (ballPosition.z >= -3.6f && ballPosition.z <= -3.55f))
+			{
+				ballVelocity = (abs(ballVelocity));
+				ballVelocity *= -1;
+			}
+			if ((ballPosition.x >= leftP2 && ballPosition.x <= rightP2) && (ballPosition.z <= -10.4f && ballPosition.z >= -10.45))
+			{
+				ballVelocity = (abs(ballVelocity));
+			}
 
-		if (ballPosition.z >= -2.0f || ballPosition.z <= -11.0f )
-		{
-			ballPosition = initialBallPos;
-			ballVelocity = initialBallVel;
+			ballPosition += ballVelocity;
 
+			if (ballPosition.z >= -2.0f || ballPosition.z <= -11.0f)
+			{
+				if (ballPosition.z >= -2.0f)
+				{
+					ballVelocity = initialBallVel;
+					P2points += 1;
+				}
+				if (ballPosition.z <= -11.0f)
+				{
+					ballVelocity = -initialBallVel;
+					P1points += 1;
+				}
+				ballPosition = initialBallPos;
+
+
+
+			}
 		}
 
 		mat4 translateBall = glm::translate(glm::mat4(1.0f), ballPosition);
