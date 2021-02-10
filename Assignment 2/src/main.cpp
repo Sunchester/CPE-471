@@ -64,8 +64,10 @@ public:
 };
 
 camera mycam;
-float moveStatus = 0;
-float moveStatus2 = 0;
+int moveStatus = 0;
+int moveStatusR = 0;
+int moveStatus2 = 0;
+int moveStatus2R = 0;
 class Application : public EventCallbacks
 {
 
@@ -115,11 +117,11 @@ public:
 		}
 		if (key == GLFW_KEY_D && action == GLFW_PRESS)
 		{
-			moveStatus = 1;
+			moveStatusR = 1;
 		}
 		if (key == GLFW_KEY_D && action == GLFW_RELEASE)
 		{
-			moveStatus = 0;
+			moveStatusR = 0;
 		}
 		if (key == GLFW_KEY_J && action == GLFW_PRESS)
 		{
@@ -131,11 +133,11 @@ public:
 		}
 		if (key == GLFW_KEY_L && action == GLFW_PRESS)
 		{
-			moveStatus2 = 1;
+			moveStatus2R = 1;
 		}
 		if (key == GLFW_KEY_L && action == GLFW_RELEASE)
 		{
-			moveStatus2 = 0;
+			moveStatus2R = 0;
 		}
 	}
 
@@ -322,22 +324,29 @@ public:
 	will actually issue the commands to draw any geometry you have set up to
 	draw
 	********/
+	float RandomNumber(float Min, float Max)
+	{
+		return ((float(rand()) / float(RAND_MAX)) * (Max - Min)) + Min;
+	}
 	void render()
 	{
 		static int P1points = 0;
 		static int P2points = 0;
 		static float offset = 0.0f;
-		float leftWall = -1.5f;
-		float rightWall = 1.5f;
+		float leftWallx = -1.4f;
+		float rightWallx = 1.4f;
+		float Wallz1 = -3.5f;
+		float Wallz2 = -10.5f;
+		float rightWall = 1.4f;
 		double frametime = get_last_elapsed_time();
 		static float move = 0.0f;
 		static float move2 = 0.0f;
 		static float position = 0.0f;
 		static float position2 = 0.0f;
 		vec3 initialBallPos = vec3(0.0f, -0.91, -7.0f);
-		vec3 initialBallVel = vec3(0.0f, 0.0f, 0.01f);
+		vec3 initialBallVel = vec3(RandomNumber(-0.002f, 0.01f), 0.0f, RandomNumber(0.01f, 0.015f));
 		static vec3 ballPosition = vec3(0.0f, -0.91, -7.0f);
-		static vec3 ballVelocity = vec3(0.0f, 0.0f, 0.01f);
+		static vec3 ballVelocity = vec3(RandomNumber(-0.002f, 0.01f), 0.0f, 0.01);
 		// Get current frame buffer size.
 		vec3 c;
 		int width, height;
@@ -389,19 +398,46 @@ public:
 		glUniform3fv(prog->getUniform("diffcol"), 1, value_ptr(c));
 		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
 
+		// Wall 1
+
+		c.x = 1;
+		c.y = 0;
+		c.z = 1;
+		mat4 transW = glm::translate(glm::mat4(1.0f), glm::vec3(-1.5f, -1.0f, -7.0f));
+		mat4 scaleW = glm::scale(glm::mat4(1.0f), glm::vec3(0.1, 0.1, 3.5f));
+		M = transW * scaleW;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("diffcol"), 1, value_ptr(c));
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
+		// Wall 2
+		c.x = 1;
+		c.y = 0;
+		c.z = 1;
+		mat4 transW2 = glm::translate(glm::mat4(1.0f), glm::vec3(1.5f, -1.0f, -7.0f));
+		mat4 scaleW2 = glm::scale(glm::mat4(1.0f), glm::vec3(0.1, 0.1, 3.5f));
+		M = transW2 * scaleW2;
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform3fv(prog->getUniform("diffcol"), 1, value_ptr(c));
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
+
 
 		if (moveStatus == -1 && position>= -1.30f)
 		{
-			move = -1.0f * frametime;
+			move = -1.2f * frametime;
 			position += move;
 		}
-		else if (moveStatus == 1 && position <= 1.30f)
+		if (moveStatusR == 1 && position <= 1.30f)
 		{
-			move = 1.0f * frametime;
+			move = 1.2f * frametime;
 			position += move;
 		}
-		else if(moveStatus == 0)
-			move = 0.0f;
+		/*if(moveStatus == 0)
+			move = 0.0f;*/
 		//cout << position << endl;
 		// Player 1
 		c.x = 1;
@@ -419,16 +455,16 @@ public:
 
 		if (moveStatus2 == -1 && position2 >= -1.30f)
 		{
-			move2 = -1.0f * frametime;
+			move2 = -1.5f * frametime;
 			position2 += move2;
 		}
-		else if (moveStatus2 == 1 && position2 <= 1.30f)
+		if (moveStatus2R == 1 && position2 <= 1.30f)
 		{
-			move2 = 1.0f * frametime;
+			move2 = 1.5f * frametime;
 			position2 += move2;
 		}
-		else if (moveStatus2 == 0)
-			move2 = 0.0f;
+		/*if (moveStatus2 == 0)
+			move2 = 0.0f;*/
 		// Player 2
 		c.x = 0.1;
 		c.y = 1;
@@ -441,7 +477,7 @@ public:
 		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
 		glUniform3fv(prog->getUniform("diffcol"), 1, value_ptr(c));
 		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
-
+		cout << ballVelocity.x << endl;
 		// P1 Points
 
 		if (P1points >= 1)
@@ -733,6 +769,9 @@ public:
 
 		prog->unbind();
 		prog2->bind();
+		static mat4 rotateBall = mat4(1.0f);
+		static float r2;
+		static float r3;
 		if (P1points != 10 && P2points != 10)
 		{
 			float leftP1 = (-1 * 0.2) + position;
@@ -741,26 +780,50 @@ public:
 			float rightP2 = (1 * 0.2) + position2;
 			if ((ballPosition.x >= leftP1 && ballPosition.x <= rightP1) && (ballPosition.z >= -3.6f && ballPosition.z <= -3.55f))
 			{
+				
 				ballVelocity = (abs(ballVelocity));
+				r2 = RandomNumber(-0.004f, 0.004f);
 				ballVelocity *= -1;
+				if (ballVelocity.x <= -0.1 && ballVelocity.x >= 0.1 && r2 >= 0.0f)
+					r2 = 0;
+				ballVelocity.x = ballVelocity.x + r2;
+				if (moveStatusR == 1 || moveStatus == -1)
+					ballVelocity *= 1.25f;
+
 			}
 			if ((ballPosition.x >= leftP2 && ballPosition.x <= rightP2) && (ballPosition.z <= -10.4f && ballPosition.z >= -10.45))
 			{
 				ballVelocity = (abs(ballVelocity));
-			}
+				r3 = RandomNumber(-0.004f, 0.004f);
+				if (ballVelocity.x <= -0.1 && ballVelocity.x >= 0.1 && r3 >= 0.0f)
+					r3 = 0;
+				ballVelocity.x = ballVelocity.x + r3;
+				if (moveStatus2R == 1 || moveStatus2 == -1)
+					ballVelocity *= 1.25f;
 
+			}
+			if ((ballPosition.x <= leftWallx) && (ballPosition.z <= Wallz1 && ballPosition.z >= Wallz2))
+			{
+				ballVelocity.x = (abs(ballVelocity.x));
+			}
+			if ((ballPosition.x >= rightWallx) && (ballPosition.z <= Wallz1 && ballPosition.z >= Wallz2))
+			{
+				
+				ballVelocity.x = (abs(ballVelocity.x));
+				ballVelocity.x *= -1;
+			}
 			ballPosition += ballVelocity;
 
 			if (ballPosition.z >= -2.0f || ballPosition.z <= -11.0f)
 			{
 				if (ballPosition.z >= -2.0f)
 				{
-					ballVelocity = initialBallVel;
+					ballVelocity = -initialBallVel;
 					P2points += 1;
 				}
 				if (ballPosition.z <= -11.0f)
 				{
-					ballVelocity = -initialBallVel;
+					ballVelocity = initialBallVel;
 					P1points += 1;
 				}
 				ballPosition = initialBallPos;
@@ -772,7 +835,7 @@ public:
 
 		mat4 translateBall = glm::translate(glm::mat4(1.0f), ballPosition);
 		mat4 scaleBall = glm::scale(glm::mat4(1.0f), glm::vec3(0.07, 0.07, 0.07));
-		M = translateBall * scaleBall;
+		M = translateBall*rotateBall* scaleBall;
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
 		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
 		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
