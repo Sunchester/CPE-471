@@ -185,6 +185,7 @@ public:
 		prog->addUniform("P");
 		prog->addUniform("V");
 		prog->addUniform("M");
+		prog->addUniform("dn");
 		prog->addUniform("campos");
 		prog->addAttribute("vertPos");
 		prog->addAttribute("vertNor");
@@ -221,7 +222,7 @@ public:
 
 		//animation with the model matrix:
 		static float w = 0.0;
-		w += 1.0 * frametime;//rotation angle
+		w += 1.0 * frametime * 0.2;//rotation angle
 		float trans = 0;// sin(t) * 2;
 		glm::mat4 RotateY = glm::rotate(glm::mat4(1.0f), w, glm::vec3(0.0f, 1.0f, 0.0f));
 		float angle = -3.1415926/2.0;
@@ -230,7 +231,7 @@ public:
 		glm::mat4 TransZ = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3 + trans));
 		glm::mat4 S = glm::scale(glm::mat4(1.0f), glm::vec3(0.8f, 0.8f, 0.8f));
 
-		M =  TransZ * RotateY * RotateX * S;
+		M =  TransZ  * RotateX * S;
 
 		// Draw the box using GLSL.
 		prog->bind();
@@ -243,7 +244,11 @@ public:
 
 		vec3 cpos = -mycam.pos;
 		glUniform3fv(prog->getUniform("campos"), 1, (float*) &cpos);
-
+		static float ttime = 0;
+		ttime += frametime;
+		/*float dn = sin(ttime) * 0.5 + 0.5;*/
+		float dn = ttime * 0.2;
+		glUniform1f(prog->getUniform("dn"), dn);
 		shape.draw(prog);		
 
 		prog->unbind();
