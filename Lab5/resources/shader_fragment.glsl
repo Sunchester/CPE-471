@@ -13,6 +13,7 @@ uniform sampler2D texN;
 void main()
 {
 	float factor = texture(tex3, vertex_tex).r;
+//	float factor = 1.0f;
 	vec4 tcol = texture(tex, vertex_tex);
 	tcol += texture(tex2, vertex_tex);
 	vec4 tcolN = texture(texN, vertex_tex);
@@ -30,8 +31,9 @@ void main()
 	vec3 h = normalize(cd+ld);
 	float s = dot(h,n);
 	s = clamp(s, 0, 1);
-	s= pow(s, 35);
+	s= pow(s, 50) * factor;
 	color = tcol * d + tcolN * (1-d);
-//	color.rgb += vec3(1,1,1)*s;
-	color.rgb += vec3(1,1,1)*s * factor;
+    color.rgb += vec3(1,1,1)*s;
+//  color.rgb += vec3(1,1,1)*s;
+//	color = (texture(tex3,vertex_tex));
 }

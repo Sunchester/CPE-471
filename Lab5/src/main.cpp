@@ -286,7 +286,7 @@ public:
 
 
 		//texture Earth Spec
-		str = resourceDirectory + "/8k_earth_specular_map_flip.tif";
+		str = resourceDirectory + "/spec_flip.png";
 		strcpy(filepath, str.c_str());
 		data = stbi_load(filepath, &width, &height, &channels, 4);
 		glGenTextures(1, &TextureSpec);
@@ -298,6 +298,8 @@ public:
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
+		glEnable(GL_DEPTH_TEST);
+
 
 		// texture Night
 		str = resourceDirectory + "/8k_earth_nightmap_flip.jpg";
@@ -342,7 +344,7 @@ public:
 		glUniform1i(TexNLocation, 3);
 
 
-
+		 
 		/*Tex1Location = glGetUniformLocation(psky->pid, "tex");*///tex, tex2... sampler in the fragment shader
 		//Tex2Location = glGetUniformLocation(psky->pid, "tex2");
 		// Then bind the uniform samplers to texture units:
@@ -454,10 +456,10 @@ public:
 		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
 		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
 		glUniform3fv(prog->getUniform("campos"), 1, &mycam.pos[0]);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, Texture);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, TextureN);
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, TextureSpec);
+		/*glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, TextureN);	*/
 		/*glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, TextureN);*/
 		/*static float ttime = 0;
