@@ -16,7 +16,7 @@ void main()
 	float t = 1./100;
 	texcoords -= vec2(camoff.x,camoff.z)*t;
 	float height = texture(tex,texcoords).r;
-	height *= 20;
+	height *= 35;
 	vec4 tpos =  vec4(vertPos,1.0);
 	tpos.z-=camoff.z;
 	tpos.x-=camoff.x;
