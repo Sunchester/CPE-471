@@ -15,6 +15,7 @@ CPE/CSC 471 Lab base code Wood/Dunn/Eckhardt
 // value_ptr for glm
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <algorithm>
 using namespace std;
 using namespace glm;
 shared_ptr<Shape> shape;
@@ -28,19 +29,34 @@ double get_last_elapsed_time()
 	lasttime = actualtime;
 	return difference;
 }
+vector <vec3> posV, posV2, posV3;
+float RandomNumber(int Min, int Max)
+{
+	return (Min + rand() % (Max - Min + 1));
+}
+
+vec3 campos;
+bool compare_fct(vec3& i, vec3& j)
+{
+	float dist1 = distance(campos, i);
+	float dist2 = distance(campos, j);
+	return dist1 > dist2;
+}
+
 class camera
 {
 public:
 	glm::vec3 pos, rot;
-	int w, a, s, d;
+	int w, a, s, d, t, g,r,f;
 	camera()
 	{
-		w = a = s = d = 0;
-		pos = rot = glm::vec3(0, 0, 0);
+		w = a = s = d = t = g = r= f= 0;
+		pos = rot = glm::vec3(0, 25, -100);
 	}
 	glm::mat4 process(double ftime)
 	{
 		float speed = 0;
+		float updown = 0;
 		if (w == 1)
 		{
 			speed = 15*ftime;
@@ -49,18 +65,37 @@ public:
 		{
 			speed = -15*ftime;
 		}
+		if (t == 1)
+		{
+			updown = -15 * ftime;
+		}
+		else if (g == 1)
+		{
+			updown = 15 * ftime;
+		}
+		float xangle = 0;
+		if (r == 1)
+		{
+			xangle = -3 * ftime;
+		}
+		else if (f == 1)
+		{
+			xangle = 3 * ftime;
+		}
 		float yangle=0;
 		if (a == 1)
 			yangle = -3*ftime;
 		else if(d==1)
 			yangle = 3*ftime;
 		rot.y += yangle;
+		rot.x += xangle;
 		glm::mat4 R = glm::rotate(glm::mat4(1), rot.y, glm::vec3(0, 1, 0));
-		glm::vec4 dir = glm::vec4(0, 0, speed,1);
-		dir = dir*R;
+		glm::mat4 Rx = glm::rotate(glm::mat4(1), rot.x, glm::vec3(1, 0, 0));
+		glm::vec4 dir = glm::vec4(0, updown, speed,1);
+		dir = dir*Rx*R;
 		pos += glm::vec3(dir.x, dir.y, dir.z);
 		glm::mat4 T = glm::translate(glm::mat4(1), pos);
-		return R*T;
+		return Rx*R*T;
 	}
 };
 
@@ -124,6 +159,38 @@ public:
 		if (key == GLFW_KEY_D && action == GLFW_RELEASE)
 		{
 			mycam.d = 0;
+		}
+		if (key == GLFW_KEY_T && action == GLFW_PRESS)
+		{
+			mycam.t = 1;
+		}
+		if (key == GLFW_KEY_T && action == GLFW_RELEASE)
+		{
+			mycam.t = 0;
+		}
+		if (key == GLFW_KEY_G && action == GLFW_PRESS)
+		{
+			mycam.g = 1;
+		}
+		if (key == GLFW_KEY_G && action == GLFW_RELEASE)
+		{
+			mycam.g = 0;
+		}
+		if (key == GLFW_KEY_R && action == GLFW_PRESS)
+		{
+			mycam.r = 1;
+		}
+		if (key == GLFW_KEY_R && action == GLFW_RELEASE)
+		{
+			mycam.r = 0;
+		}
+		if (key == GLFW_KEY_F && action == GLFW_PRESS)
+		{
+			mycam.f = 1;
+		}
+		if (key == GLFW_KEY_F && action == GLFW_RELEASE)
+		{
+			mycam.f = 0;
 		}
 	}
 
@@ -281,7 +348,7 @@ public:
 
 
 		//texture 2
-		string str = resourceDirectory + "/better_sky.jpg";
+		string str = resourceDirectory + "/dep_sky.jpg";
 		strcpy(filepath, str.c_str());
 		unsigned char* data = stbi_load(filepath, &width, &height, &channels, 4);
 		glGenTextures(1, &Texture2);
@@ -361,20 +428,36 @@ public:
 		psky->addUniform("M");
 		psky->addAttribute("vertPos");
 		psky->addAttribute("vertTex");
+
+		auto iterator = posV.begin();
+		for (int x = 0; x < 20; x++)
+		{
+			iterator = posV.insert(iterator,vec3(RandomNumber(-7, 90), RandomNumber(-5, 40), RandomNumber(-115, -185)));
+			
+		}
+		
+		/*int j = 0;
+		for(vec3 po: posV)
+		{
+			j += 1;
+			cout << "X COMPONENT: " << po.x << "Y COMPONENT: " << po.y << "Z COMPONENT: " << po.z << endl;
+		}*/
 	}
 
-
+	
 	/****DRAW
 	This is the most important function in your program - this is where you
 	will actually issue the commands to draw any geometry you have set up to
 	draw
 	********/
+	
 	void render()
 	{
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		double frametime = get_last_elapsed_time();
-
+		static int x = 0;
+		static int y = 0;
 		// Get current frame buffer size.
 		int width, height;
 		glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
@@ -394,8 +477,9 @@ public:
 		float sangle = 3.1415926 / 2.;
 		glm::mat4 RotateXSky = glm::rotate(glm::mat4(1.0f), sangle, glm::vec3(1.0f, 0.0f, 0.0f));
 		glm::vec3 camp = -mycam.pos;
+		campos = -mycam.pos;
 		glm::mat4 TransSky = glm::translate(glm::mat4(1.0f), camp);
-		glm::mat4 SSky = glm::scale(glm::mat4(1.0f), glm::vec3(0.8f, 0.8f, 0.8f));
+		glm::mat4 SSky = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
 
 		M = TransSky * RotateXSky * SSky;
 
@@ -429,58 +513,37 @@ public:
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, TextureClouds);
 		glDisable(GL_DEPTH_TEST);
-		vec2 off = vec2(2, 2) * 0.25f;
 		mat4 particleView = V;
 		particleView[3][0] = 0;
 		particleView[3][1] = 0;
 		particleView[3][2] = 0;
 		particleView = inverse(particleView);
 		
-		vec3 camD = camp;
-		vec3 leftcloud = vec3(0.0, -1.3, -100);
-		vec3 rightcloud = vec3(50.0, -1.3, -100);
-		float dist = distance(camD, leftcloud);
-		float dist2 = distance(camD, rightcloud);
 		
-		if (dist > dist2)
+		
+		sort(posV.begin(), posV.end(), (compare_fct));
+
+		for (vec3 c : posV)
 		{
-			TransZ = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.3f, -100));
-			S = glm::scale(glm::mat4(1.0f), glm::vec3(50.f, 50.f, 0.f));
+
+			TransZ = glm::translate(glm::mat4(1.0f), c);
+			S = glm::scale(glm::mat4(1.0f), glm::vec3(24.f, 24.f, 0.f));
 			M = TransZ * particleView * S;
+			vec2 off = vec2(2, 3) * 0.25f;
 			glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
 			glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
 			glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
 			glUniform2fv(prog->getUniform("offset"), 1, &off.x);
 			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, (void*)0);
 
-
-			TransZ = glm::translate(glm::mat4(1.0f), glm::vec3(50.0f, -1.3f, -100));
-			S = glm::scale(glm::mat4(1.0f), glm::vec3(50.f, 50.f, 0.f));
-			M = TransZ * particleView * S;
-			glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
-			glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
-			glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
-			glUniform2fv(prog->getUniform("offset"), 1, &off.x);
-			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, (void*)0);
 		}
-
-		else if (dist2 > dist)
+		for (vec3 c : posV)
 		{
-			TransZ = glm::translate(glm::mat4(1.0f), glm::vec3(50.0f, -1.3f, -100));
-			S = glm::scale(glm::mat4(1.0f), glm::vec3(50.f, 50.f, 0.f));
+
+			TransZ = glm::translate(glm::mat4(1.0f), c);
+			S = glm::scale(glm::mat4(1.0f), glm::vec3(24.f, 24.f, 0.f));
 			M = TransZ * particleView * S;
-			glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
-			glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
-			glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
-			glUniform2fv(prog->getUniform("offset"), 1, &off.x);
-			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, (void*)0);
-
-
-
-
-			TransZ = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.3f, -100));
-			S = glm::scale(glm::mat4(1.0f), glm::vec3(50.f, 50.f, 0.f));
-			M = TransZ * particleView * S;
+			vec2 off = vec2(2, 2) * 0.25f;
 			glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
 			glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
 			glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
@@ -489,10 +552,24 @@ public:
 
 		}
 
+		for (vec3 c : posV)
+		{
+
+			TransZ = glm::translate(glm::mat4(1.0f), c);
+			S = glm::scale(glm::mat4(1.0f), glm::vec3(24.f, 24.f, 0.f));
+			M = TransZ * particleView * S;
+			vec2 off = vec2(3, 2) * 0.25f;
+			glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+			glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+			glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+			glUniform2fv(prog->getUniform("offset"), 1, &off.x);
+			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, (void*)0);
+
+		}
 
 
 
-
+		
 		glEnable(GL_DEPTH_TEST);
 
 		glBindVertexArray(0);
