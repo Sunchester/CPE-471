@@ -18,7 +18,7 @@ vec4 b = texture(tex, texcoords);
 vec3 heightcolor=  texture(tex, texcoords).rgb;
 vec3 watercolor = texture(tex, texcoords).rgb;
 heightcolor.r = 0.1 + heightcolor.r*0.9;
-watercolor.r = 0.8 + watercolor.r;
+watercolor.r = 0.9 + watercolor.r;
 if(b.x <= 0.05 && b.y <= 0.05 && b.z <= 0.05)
 {
 	color.rgb = vec3(156.0/255.0,211.0/255.0,219.0/255.0) * watercolor.r;
