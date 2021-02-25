@@ -36,7 +36,7 @@ public:
 	camera()
 	{
 		w = a = s = d = t = g = r = f = 0;
-		pos = rot = glm::vec3(0, 0, 0);
+		pos = rot = glm::vec3(0, -5, 0);
 	}
 	glm::mat4 process(double ftime)
 	{
@@ -44,7 +44,7 @@ public:
 		float updown = 0;
 		if (w == 1)
 		{
-			speed = 15 * ftime;
+			speed = 250 * ftime;
 		}
 		else if (s == 1)
 		{
@@ -94,16 +94,16 @@ public:
 	WindowManager * windowManager = nullptr;
 
 	// Our shader program
-	std::shared_ptr<Program> prog,psky;
+	std::shared_ptr<Program> prog,psky,water;
 
 	// Contains vertex information for OpenGL
-	GLuint VertexArrayID;
+	GLuint VertexArrayID, Cube;
 
 	// Data necessary to give our box to OpenGL
-	GLuint VertexBufferID, VertexNormDBox, VertexTexBox, IndexBufferIDBox, MeshPosID, MeshTexID;
+	GLuint VertexBufferID, VertexNormDBox, VertexTexBox, IndexBufferIDBox, MeshPosID, MeshTexID, CubeBuff, CubeID;
 
 	//texture data
-	GLuint TextureHeight, TextureCan, TextureSky;
+	GLuint TextureHeight, TextureCan, TextureSky, TextureWater;
 	
 
 	void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
@@ -277,80 +277,80 @@ public:
 	/*Note that any gl calls must always happen after a GL state is initialized */
 	void initGeom()
 	{
-		init_mesh();
 		////generate the VAO
-		//glGenVertexArrays(1, &VertexArrayID);
-		//glBindVertexArray(VertexArrayID);
+		glGenVertexArrays(1, &Cube);
+		glBindVertexArray(Cube);
 
-		////generate vertex buffer to hand off to OGL
-		//glGenBuffers(1, &VertexBufferID);
-		////set the current state to focus on our vertex buffer
-		//glBindBuffer(GL_ARRAY_BUFFER, VertexBufferID);
+		//generate vertex buffer to hand off to OGL
+		glGenBuffers(1, &CubeBuff);
+		//set the current state to focus on our vertex buffer
+		glBindBuffer(GL_ARRAY_BUFFER, CubeBuff);
 
-		//GLfloat rect_vertices[] = {
-		//	// front
-		//	-1.0, -1.0,  1.0,//LD
-		//	1.0, -1.0,  1.0,//RD
-		//	1.0,  1.0,  1.0,//RU
-		//	-1.0,  1.0,  1.0,//LU
-		//};
-		////make it a bit smaller
-		//for (int i = 0; i < 12; i++)
-		//	rect_vertices[i] *= 0.5;
-		////actually memcopy the data - only do this once
-		//glBufferData(GL_ARRAY_BUFFER, sizeof(rect_vertices), rect_vertices, GL_DYNAMIC_DRAW);
+		GLfloat rect_vertices[] = {
+			// front
+			-1.0, -1.0,  1.0,//LD
+			1.0, -1.0,  1.0,//RD
+			1.0,  1.0,  1.0,//RU
+			-1.0,  1.0,  1.0,//LU
+		};
+		//make it a bit smaller
+		for (int i = 0; i < 12; i++)
+			rect_vertices[i] *= 0.5;
+		//actually memcopy the data - only do this once
+		glBufferData(GL_ARRAY_BUFFER, sizeof(rect_vertices), rect_vertices, GL_DYNAMIC_DRAW);
 
-		////we need to set up the vertex array
-		//glEnableVertexAttribArray(0);
-		////key function to get up how many elements to pull out at a time (3)
-		//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+		//we need to set up the vertex array
+		glEnableVertexAttribArray(0);
+		//key function to get up how many elements to pull out at a time (3)
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
-		////color
-		//GLfloat cube_norm[] = {
-		//	// front colors
-		//	0.0, 0.0, 1.0,
-		//	0.0, 0.0, 1.0,
-		//	0.0, 0.0, 1.0,
-		//	0.0, 0.0, 1.0,
+		//color
+		GLfloat cube_norm[] = {
+			// front colors
+			0.0, 0.0, 1.0,
+			0.0, 0.0, 1.0,
+			0.0, 0.0, 1.0,
+			0.0, 0.0, 1.0,
 
-		//};
-		//glGenBuffers(1, &VertexNormDBox);
-		////set the current state to focus on our vertex buffer
-		//glBindBuffer(GL_ARRAY_BUFFER, VertexNormDBox);
-		//glBufferData(GL_ARRAY_BUFFER, sizeof(cube_norm), cube_norm, GL_STATIC_DRAW);
-		//glEnableVertexAttribArray(1);
-		//glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+		};
+		glGenBuffers(1, &VertexNormDBox);
+		//set the current state to focus on our vertex buffer
+		glBindBuffer(GL_ARRAY_BUFFER, VertexNormDBox);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(cube_norm), cube_norm, GL_STATIC_DRAW);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
-		////color
-		//glm::vec2 cube_tex[] = {
-		//	// front colors
-		//	glm::vec2(0.0, 2.0),
-		//	glm::vec2(2.0, 2.0),
-		//	glm::vec2(2.0, 0.0),
-		//	glm::vec2(0.0, 0.0),
+		//color
+		glm::vec2 cube_tex[] = {
+			// front colors
+			glm::vec2(0.0, 2.0),
+			glm::vec2(2.0, 2.0),
+			glm::vec2(2.0, 0.0),
+			glm::vec2(0.0, 0.0),
 
-		//};
-		//glGenBuffers(1, &VertexTexBox);
-		////set the current state to focus on our vertex buffer
-		//glBindBuffer(GL_ARRAY_BUFFER, VertexTexBox);
-		//glBufferData(GL_ARRAY_BUFFER, sizeof(cube_tex), cube_tex, GL_STATIC_DRAW);
-		//glEnableVertexAttribArray(2);
-		//glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+		};
+		glGenBuffers(1, &VertexTexBox);
+		//set the current state to focus on our vertex buffer
+		glBindBuffer(GL_ARRAY_BUFFER, VertexTexBox);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(cube_tex), cube_tex, GL_STATIC_DRAW);
+		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
-		//glGenBuffers(1, &IndexBufferIDBox);
-		////set the current state to focus on our vertex buffer
-		//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBufferIDBox);
-		//GLushort cube_elements[] = {
+		glGenBuffers(1, &CubeID);
+		//set the current state to focus on our vertex buffer
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, CubeID);
+		GLushort cube_elements[] = {
 
-		//	// front
-		//	0, 1, 2,
-		//	2, 3, 0,
-		//};
-		//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cube_elements), cube_elements, GL_STATIC_DRAW);
+			// front
+			0, 1, 2,
+			2, 3, 0,
+		};
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cube_elements), cube_elements, GL_STATIC_DRAW);
 
 
 
-		//glBindVertexArray(0);
+		glBindVertexArray(0);
+		init_mesh();
 
 		string resourceDirectory = "../resources" ;
 		//// Initialize mesh.
@@ -390,6 +390,7 @@ public:
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 
+		//str = resourceDirectory + "/canyontest.jpg";
 		str = resourceDirectory + "/canyon.jpg";
 		strcpy(filepath, str.c_str());
 		data = stbi_load(filepath, &width, &height, &channels, 4);
@@ -403,7 +404,18 @@ public:
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 
-
+		str = resourceDirectory + "/water.jpg";
+		strcpy(filepath, str.c_str());
+		data = stbi_load(filepath, &width, &height, &channels, 4);
+		glGenTextures(1, &TextureWater);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, TextureWater);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
 		//[TWOTEXTURES]
 		//set the 2 textures to the correct samplers in the fragment shader:
 		GLuint Tex1Location = glGetUniformLocation(prog->pid, "tex");//tex, tex2... sampler in the fragment shader
@@ -461,6 +473,23 @@ public:
 		psky->addAttribute("vertPos");
 		psky->addAttribute("vertTex");
 
+		water = std::make_shared<Program>();
+		water->setVerbose(true);
+		water->setShaderNames(resourceDirectory + "/water_v.glsl", resourceDirectory + "/water_frag.glsl");
+		if (!water->init())
+		{
+			std::cerr << "One or more shaders failed to compile... exiting!" << std::endl;
+			exit(1);
+		}
+		water->addUniform("P");
+		water->addUniform("V");
+		water->addUniform("M");
+		water->addUniform("campos");
+		water->addUniform("camoff");
+		water->addAttribute("vertPos");
+		water->addAttribute("vertTex");
+
+
 		
 	}
 
@@ -508,12 +537,7 @@ public:
 		glUniform3fv(psky->getUniform("campos"), 1, &mycam.pos[0]);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, TextureSky);
-		/*glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, TextureN);*/
-		/*static float ttime = 0;
-		ttime += frametime;
-		float dn = sin(ttime)*0.5 +0.5;*/
-		/*glUniform1f(psky->getUniform("dn"), dn);		*/
+		
 		glDisable(GL_DEPTH_TEST);
 		shape->draw(psky, FALSE);
 		glEnable(GL_DEPTH_TEST);	
@@ -534,11 +558,11 @@ public:
 		offset.x = (int)offset.x;
 		offset.z = (int)offset.z;
 		glUniform3fv(prog->getUniform("camoff"), 1, &offset[0]);
-
+		cout << offset.x << endl;
 		glBindVertexArray(VertexArrayID);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBufferIDBox);
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		glm::mat4 TransY = glm::translate(glm::mat4(1.0f), glm::vec3(-50.0f, -20.0f, -50));
+		glm::mat4 TransY = glm::translate(glm::mat4(1.0f), glm::vec3(-50.0f, -25.0f, -50));
 		M = TransY;
 
 		
@@ -555,26 +579,39 @@ public:
 		
 		glDrawElements(GL_TRIANGLES, MESHSIZE * MESHSIZE * 6, GL_UNSIGNED_SHORT, (void*)0);
 
-		//glBindVertexArray(VertexArrayID);
-		////actually draw from vertex 0, 3 vertices
-		//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBufferIDBox);
-		////glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, (void*)0);
-		//
-		//glActiveTexture(GL_TEXTURE0);
-		//glBindTexture(GL_TEXTURE_2D, Texture);
-		//
-		//TransZ = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.3f, -17));
-		//S = glm::scale(glm::mat4(1.0f), glm::vec3(100.f, 100.f, 0.f));
-		//float angle = 3.1415926 / 2.0f;
-		//RotateX = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(1.0f, 0.0f, 0.0f));
-
-		//M = TransZ *  RotateX * S;
-		//glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
-		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, (void*)0);		
-		//glBindVertexArray(0);
-		//
+		
 		prog->unbind();
 
+
+
+
+		// DISABLE FROM HERE
+
+
+		water->bind();
+		glBindVertexArray(Cube);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, CubeID);
+		
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, TextureWater);
+		
+		TransZ = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, -17));
+		S = glm::scale(glm::mat4(1.0f), glm::vec3(10000.f, 10000.f, 0.f));
+		float angle = 3.1415926 / 2.0f;
+		RotateX = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(1.0f, 0.0f, 0.0f));
+
+		M = TransZ *  RotateX * S;
+		glUniformMatrix4fv(water->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniformMatrix4fv(water->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(water->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniform3fv(water->getUniform("campos"), 1, &mycam.pos[0]);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, (void*)0);		
+		glBindVertexArray(0);
+		
+		water->unbind();
+
+
+		// TO HERE
 	}
 
 };

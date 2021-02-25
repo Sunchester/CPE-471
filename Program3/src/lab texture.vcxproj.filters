@@ -30,5 +30,7 @@
     <None Include="..\resources\shader_vertex.glsl" />
     <None Include="..\resources\skyfrag.glsl" />
     <None Include="..\resources\skyvertex.glsl" />
+    <None Include="..\resources\water_frag.glsl" />
+    <None Include="..\resources\water_v.glsl" />
   </ItemGroup>
 </Project>
