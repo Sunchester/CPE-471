@@ -24,7 +24,7 @@ color.rgb = texture(tex2, texcoords*100).rgb * heightcolor.r;
 // !!! HELLO OVER HERE ENABLE THIS TO SHOW THE RED LINE!!!
 // AND DISABLE SOME THINGS DOWN BELOW!
 //color.rgb = texture(tex2, texcoords/100).rgb;
-//
+////
 
 color.a = 1;
 

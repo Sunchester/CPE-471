@@ -499,7 +499,7 @@ public:
 		glm::mat4 RotateX;
 		glm::mat4 TransZ;
 		glm::mat4 S;
-
+ 
 	
 		// Draw the box using GLSL.
 		prog->bind();
